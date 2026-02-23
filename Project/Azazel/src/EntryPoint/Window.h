@@ -7,12 +7,13 @@ public:
     Window();
     ~Window();
 
-    void CreateAndRegisterWindowClass(HINSTANCE& hInstance, LPCWSTR className);
     bool ProcessMessages();
-
     HWND& GetHWND();
 
 private:
+    void CreateAndRegisterWindowClass(HINSTANCE& hInstance, LPCWSTR className);
+    void UpdateMouseInsideWindow();
+
     HINSTANCE myHInstance;
     HWND myHWND;
 };

@@ -11,7 +11,7 @@ enum LogType
 	eError
 };
 
-namespace Log
+namespace LOG
 {
 	static void Print(std::string aString, LogType aLogType = LogType::eStandard)
 	{
@@ -51,8 +51,8 @@ namespace Log
 	}
 }
 
-#define LOG(string) Log::Print(string, LogType::eStandard)
-#define LOG_SUCCESS(string) Log::Print(string, LogType::eSuccess)
-#define LOG_WARNING(string) Log::Print(string, LogType::eWarning)
-#define LOG_ERROR(string) Log::Print(string, LogType::eError)
+#define LOG(string) LOG::Print(string, LogType::eStandard)
+#define LOG_SUCCESS(string) LOG::Print(string, LogType::eSuccess)
+#define LOG_WARNING(string) LOG::Print(string, LogType::eWarning)
+#define LOG_ERROR(string) LOG::Print(string, LogType::eError)
 #define Assert(bool) assert(bool)

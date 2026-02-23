@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Window.h"
+#include "Tools/Input.h"
 
 int main()
 {
@@ -13,6 +14,10 @@ int main()
 			running = false;
 			break;
 		}
+
+		// Main Loop
+		INPUT.Update();
+		LOG("Test");
 	}
 
 	return 0;

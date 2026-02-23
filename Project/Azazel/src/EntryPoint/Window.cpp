@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Window.h"
+#include "Tools/Input.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -63,15 +64,34 @@ bool Window::ProcessMessages()
 	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 	{
 		if (msg.message == WM_QUIT)
-		{
 			return false;
-		}
+
+		UpdateMouseInsideWindow(),
 
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
 
 	return true;
+}
+
+void Window::UpdateMouseInsideWindow()
+{
+	POINT mousePos;
+	if (!GetCursorPos(&mousePos))
+		LOG_WARNING("GetCursorPos() ran unsuccessfully");
+
+	RECT clientRect;
+	if (!GetClientRect(myHWND, &clientRect))
+		LOG_WARNING("GetClientRect() ran unsuccessfully");
+
+	if (!ScreenToClient(myHWND, &mousePos))
+		LOG_WARNING("ScreenToClient() ran unsuccessfully");
+
+	bool inside = mousePos.x >= 0 && mousePos.y >= 0 &&
+		mousePos.x < clientRect.right && mousePos.y < clientRect.bottom;
+
+	INPUT.MouseInsideWindowUpdate(inside);
 }
 
 HWND& Window::GetHWND()
@@ -81,6 +101,8 @@ HWND& Window::GetHWND()
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	INPUT.UpdateEvents(uMsg, wParam, lParam);
+
 	switch (uMsg)
 	{
 		case WM_DESTROY:
