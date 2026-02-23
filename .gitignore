@@ -1,12 +1,17 @@
-# Visual Studio 2015/2017/2022
+# Other
+.vs/
+*.vcxproj
+*.sln
+*.filters
+
+# User-specific files
 *.rsuser
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
-*.vcxproj
-*.sln
-*.filters
+
+# Files built by Visual Studio
 *_i.c
 *_p.c
 *_h.h
@@ -35,7 +40,6 @@
 *.pidb
 *.svclog
 *.scc
-.vs/
 
 # Prerequisites
 *.d
