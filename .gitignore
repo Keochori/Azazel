@@ -3,6 +3,8 @@
 *.vcxproj
 *.sln
 *.filters
+*.recipe
+*.idb
 
 # User-specific files
 *.rsuser
