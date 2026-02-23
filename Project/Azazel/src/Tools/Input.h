@@ -252,19 +252,19 @@ public:
 
 	static Input& GetInstance();
 
-	bool IsKeyDown(const int aKeyCode) const;
-	bool IsKeyPressed(const int aKeyCode) const;
-	bool IsKeyUp(const int aKeyCode) const;
-	bool IsMouseButtonDown(const int aMouseButtonCode) const;
-	bool IsMouseButtonPressed(const int aMouseButtonCode) const;
-	bool IsMouseButtonUp(const int aMouseButtonCode) const;
+	bool IsKeyDown(eKeys aKeyCode) const;
+	bool IsKeyPressed(eKeys aKeyCode) const;
+	bool IsKeyUp(eKeys aKeyCode) const;
+	bool IsMouseButtonDown(eKeys aMouseButtonCode) const;
+	bool IsMouseButtonPressed(eKeys aMouseButtonCode) const;
+	bool IsMouseButtonUp(eKeys aMouseButtonCode) const;
 	POINT GetMousePosition() const;
 	POINT GetMouseDelta() const;
 	void ResetMouseDelta();
 	bool GetMouseInsideWindow() const;
 	void MouseInsideWindowUpdate(bool aState);
 	bool UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam);
-	void Update();
+	void UpdateStates();
 
 private:
 	Input() = default;

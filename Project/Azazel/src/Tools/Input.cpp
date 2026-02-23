@@ -14,34 +14,34 @@ Input& Input::GetInstance()
 	return *myInstance;
 }
 
-bool Input::IsKeyDown(const int aKeyCode) const
+bool Input::IsKeyDown(eKeys aKeyCode) const
 {
-	return myCurrentState[aKeyCode] && myPreviousState[aKeyCode];
+	return myCurrentState[(int)aKeyCode] && myPreviousState[(int)aKeyCode];
 }
 
-bool Input::IsKeyPressed(const int aKeyCode) const
+bool Input::IsKeyPressed(eKeys aKeyCode) const
 {
-	return myCurrentState[aKeyCode] && !myPreviousState[aKeyCode];
+	return myCurrentState[(int)aKeyCode] && !myPreviousState[(int)aKeyCode];
 }
 
-bool Input::IsKeyUp(const int aKeyCode) const
+bool Input::IsKeyUp(eKeys aKeyCode) const
 {
-	return !myCurrentState[aKeyCode] && myPreviousState[aKeyCode];
+	return !myCurrentState[(int)aKeyCode] && myPreviousState[(int)aKeyCode];
 }
 
-bool Input::IsMouseButtonDown(const int aMouseButtonCode) const
+bool Input::IsMouseButtonDown(eKeys aMouseButtonCode) const
 {
-	return myCurrentState[aMouseButtonCode] && myPreviousState[aMouseButtonCode];
+	return myCurrentState[(int)aMouseButtonCode] && myPreviousState[(int)aMouseButtonCode];
 }
 
-bool Input::IsMouseButtonPressed(const int aMouseButtonCode) const
+bool Input::IsMouseButtonPressed(eKeys aMouseButtonCode) const
 {
-	return myCurrentState[aMouseButtonCode] && !myPreviousState[aMouseButtonCode];
+	return IsKeyPressed(aMouseButtonCode);
 }
 
-bool Input::IsMouseButtonUp(const int aMouseButtonCode) const
+bool Input::IsMouseButtonUp(eKeys aMouseButtonCode) const
 {
-	return !myCurrentState[aMouseButtonCode] && myPreviousState[aMouseButtonCode];
+	return IsKeyUp(aMouseButtonCode);
 }
 
 POINT Input::GetMousePosition() const
@@ -110,7 +110,7 @@ bool Input::UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM l
 	}
 }
 
-void Input::Update()
+void Input::UpdateStates()
 {
 	myPreviousState = myCurrentState;
 	myCurrentState = myTentativeState;

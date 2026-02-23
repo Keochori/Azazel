@@ -6,6 +6,8 @@ int main()
 {
 	Window window;
 
+	LOG_SUCCESS("STARTED AZAZEL");
+
 	bool running = true;
 	while (running)
 	{
@@ -16,7 +18,6 @@ int main()
 		}
 
 		// Main Loop
-		INPUT.Update();
 	}
 
 	return 0;

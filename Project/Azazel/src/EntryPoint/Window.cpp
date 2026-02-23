@@ -66,11 +66,13 @@ bool Window::ProcessMessages()
 		if (msg.message == WM_QUIT)
 			return false;
 
-		UpdateMouseInsideWindow(),
-
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	// Custom Updates
+	UpdateMouseInsideWindow();
+	INPUT.UpdateStates();
 
 	return true;
 }
