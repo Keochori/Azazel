@@ -17,7 +17,6 @@ int main()
 
 		// Main Loop
 		INPUT.Update();
-		LOG("Test");
 	}
 
 	return 0;

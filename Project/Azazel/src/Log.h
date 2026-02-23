@@ -1,7 +1,9 @@
 #pragma once
 
-#include <iostream>
 #include <windows.h>
+#include <iostream>
+#include <filesystem>
+#include <assert.h>
 
 enum LogType
 {
@@ -13,7 +15,7 @@ enum LogType
 
 namespace LOG
 {
-	static void Print(std::string aString, LogType aLogType = LogType::eStandard)
+	static void Print(std::string aString, const char* aFile, int aLine, LogType aLogType = LogType::eStandard)
 	{
 #define RED 12
 #define GREEN 10
@@ -24,35 +26,20 @@ namespace LOG
 
 		switch (aLogType)
 		{
-			case eStandard:
-				std::cout << aString << std::endl;
-				break;
-
-			case eSuccess:
-				SetConsoleTextAttribute(hConsole, GREEN);
-				std::cout << aString << std::endl;
-				break;
-
-			case eWarning:
-				SetConsoleTextAttribute(hConsole, YELLOW);
-				std::cout << aString << std::endl;
-				break;
-
-			case eError:
-				SetConsoleTextAttribute(hConsole, RED);
-				std::cout << aString << std::endl;
-				break;
-
-			default:
-				break;
+			case eStandard: break;
+			case eSuccess: SetConsoleTextAttribute(hConsole, GREEN); break;
+			case eWarning: SetConsoleTextAttribute(hConsole, YELLOW); break;
+			case eError: SetConsoleTextAttribute(hConsole, RED); break;
+			default: break;
 		}
 
+		std::cout << "[" << std::filesystem::path(aFile).filename().string() << ":" << aLine << "] " << aString << std::endl;
 		SetConsoleTextAttribute(hConsole, WHITE);
 	}
 }
 
-#define LOG(string) LOG::Print(string, LogType::eStandard)
-#define LOG_SUCCESS(string) LOG::Print(string, LogType::eSuccess)
-#define LOG_WARNING(string) LOG::Print(string, LogType::eWarning)
-#define LOG_ERROR(string) LOG::Print(string, LogType::eError)
+#define LOG(string) LOG::Print(string, __FILE__, __LINE__, LogType::eStandard)
+#define LOG_SUCCESS(string) LOG::Print(string, __FILE__, __LINE__, LogType::eSuccess)
+#define LOG_WARNING(string) LOG::Print(string, __FILE__, __LINE__, LogType::eWarning)
+#define LOG_ERROR(string) LOG::Print(string, __FILE__, __LINE__, LogType::eError)
 #define Assert(bool) assert(bool)

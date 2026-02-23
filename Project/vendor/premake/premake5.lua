@@ -12,6 +12,7 @@ project "Azazel"
     location "Azazel"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++20"
 
     pchheader "pch.h"
     pchsource "Azazel/src/pch.cpp"
