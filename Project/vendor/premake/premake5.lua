@@ -20,6 +20,10 @@ project "Azazel"
     targetdir (TargetDir)
     objdir (ObjectDir)
 
+    links {
+        "d3d11.lib"
+    }
+
     files {
         "Azazel/src/**.cpp",
         "Azazel/src/**.h"
