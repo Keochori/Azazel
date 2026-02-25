@@ -270,7 +270,7 @@ private:
 	Input() = default;
 	~Input() = default;
 
-	static Input* myInstance;
+	static Input* ourInstance;
 
 	std::bitset<256> myTentativeState;
 	std::bitset<256> myCurrentState;

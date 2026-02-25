@@ -1,1 +1,0 @@
-- Remove need to do (int)eKeys::G, in other words int casting on input calls
