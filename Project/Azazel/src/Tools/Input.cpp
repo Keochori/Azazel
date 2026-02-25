@@ -2,8 +2,6 @@
 #include "Input.h"
 #include <windowsx.h>
 
-Input* Input::ourInstance = nullptr;
-
 Input& Input::GetInstance()
 {
 	if (!ourInstance)
