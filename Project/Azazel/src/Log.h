@@ -17,10 +17,10 @@ namespace LOG
 {
 	static void Print(const std::string& aString, const char* aFile, int aLine, const LogType aLogType = LogType::eStandard)
 	{
-		constexpr WORD RED = 12;
-		constexpr WORD GREEN = 10;
-		constexpr WORD YELLOW = 14;
 		constexpr WORD WHITE = 15;
+		constexpr WORD GREEN = 10;
+		constexpr WORD YELLOW = 6;
+		constexpr WORD RED = 12;
 
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 

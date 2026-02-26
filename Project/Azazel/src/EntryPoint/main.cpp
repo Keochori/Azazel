@@ -1,18 +1,14 @@
 #include "pch.h"
 #include "Window.h"
 #include "Tools/Input.h"
-#include "Graphics/Graphics.h"
+#include "Engine.h"
 
 int main()
 {
-	Window window;
-	Graphics graphics(window.GetHWND());
-
 	LOG_SUCCESS("STARTED AZAZEL");
 
-	float red = 0;
-	float green = 0;
-	float blue = 0;
+	Window window;
+	Engine engine(window.GetHWND());
 
 	bool running = true;
 	while (running)
@@ -24,18 +20,7 @@ int main()
 		}
 
 		// Main Loop
-		graphics.EndFrame();
-		
-		float addValue = 0.0001f;
-		red += addValue /2;
-		green += addValue *5;
-		blue += addValue / 6;
-		graphics.ClearBuffer(red, green, blue);
-
-		if (INPUT.IsKeyPressed(eKeys::G))
-		{
-			LOG("G");
-		}
+		engine.Update();
 	}
 
 	return 0;
