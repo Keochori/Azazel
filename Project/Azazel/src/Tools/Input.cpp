@@ -2,14 +2,11 @@
 #include "Input.h"
 #include <windowsx.h>
 
+Input Input::ourInstance;
+
 Input& Input::GetInstance()
 {
-	if (!ourInstance)
-	{
-		ourInstance = new Input();
-	}
-
-	return *ourInstance;
+	return ourInstance;
 }
 
 bool Input::IsKeyDown(eKeys aKeyCode) const

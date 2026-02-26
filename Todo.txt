@@ -5,4 +5,3 @@
 - 3D Models
 - Textures
 - Animations
-- Add discord API

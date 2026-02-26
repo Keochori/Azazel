@@ -31,6 +31,11 @@ int main()
 		green += addValue *5;
 		blue += addValue / 6;
 		graphics.ClearBuffer(red, green, blue);
+
+		if (INPUT.IsKeyPressed(eKeys::G))
+		{
+			LOG("G");
+		}
 	}
 
 	return 0;
