@@ -27,7 +27,7 @@ DXGIInfoManager::DXGIInfoManager()
 		return;
 	}
 
-	if (FAILED(dxgiGetDebugInterfaceFunc(__uuidof(IDXGIInfoQueue), reinterpret_cast<void**>(&myDXGIInfoQueue))))
+	if (FAILED(dxgiGetDebugInterfaceFunc(__uuidof(IDXGIInfoQueue), &myDXGIInfoQueue)))
 	{
 		LOG_ERROR("Couldn't use DXGIGetDebugInterface function correctly");
 		return;

@@ -1,6 +1,9 @@
 #pragma once
 #include <windows.h>
 #include <memory>
+#include <wrl.h>
+
+using namespace Microsoft::WRL;
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -26,10 +29,10 @@ private:
 #define HRASSERT(hr) HRESULTCheck(hr, __FILE__, __LINE__)
 	void HRESULTCheck(HRESULT aHr, const char* aFile, int aLine);
 
-	ID3D11Device* myDevice = nullptr;
-	ID3D11DeviceContext* myContext = nullptr;
-	IDXGISwapChain* mySwapChain = nullptr;
-	ID3D11RenderTargetView* myRTV = nullptr;
+	ComPtr<ID3D11Device> myDevice = nullptr;
+	ComPtr<ID3D11DeviceContext> myContext = nullptr;
+	ComPtr<IDXGISwapChain> mySwapChain = nullptr;
+	ComPtr<ID3D11RenderTargetView> myRTV = nullptr;
 	std::unique_ptr<DXGIInfoManager> myDXGIInfoManager;
 };
 

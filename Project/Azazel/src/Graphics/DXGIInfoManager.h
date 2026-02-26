@@ -1,4 +1,7 @@
 #pragma once
+#include <wrl.h>
+
+using namespace Microsoft::WRL;
 
 struct IDXGIInfoQueue;
 
@@ -26,6 +29,6 @@ public:
 
 private:
 	UINT64 currentPos = 0u;
-	IDXGIInfoQueue* myDXGIInfoQueue;
+	ComPtr<IDXGIInfoQueue> myDXGIInfoQueue;
 };
 

@@ -43,35 +43,27 @@ DX11::DX11(HWND aHWND)
 		&myContext
 	));
 
-	ID3D11Resource* backBuffer = nullptr;
-	HRASSERT(mySwapChain->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(&backBuffer)));
+	// Create RTV
+	ComPtr<ID3D11Resource> backBuffer = nullptr;
+	HRASSERT(mySwapChain->GetBuffer(0, __uuidof(ID3D11Resource), &backBuffer));
 	if (!backBuffer)
 		return;
 
 	HRASSERT(myDevice->CreateRenderTargetView(
-		backBuffer,
+		backBuffer.Get(),
 		nullptr,
 		&myRTV
 	));
-	backBuffer->Release();
 }
 
 DX11::~DX11()
 {
-	if (mySwapChain != nullptr)
-		mySwapChain->Release();
-
-	if (myContext != nullptr)
-		myContext->Release();
-
-	if (myDevice != nullptr)
-		myDevice->Release();
 }
 
 void DX11::ClearBuffer(float r, float g, float b)
 {
 	const float color[] = { r,g,b,1.0f };
-	myContext->ClearRenderTargetView(myRTV, color);
+	myContext->ClearRenderTargetView(myRTV.Get(), color);
 }
 
 void DX11::EndFrame()
