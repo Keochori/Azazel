@@ -18,15 +18,19 @@ project "Azazel"
     pchsource "Azazel/src/pch.cpp"
 
     targetdir (TargetDir)
-    objdir (ObjectDir)
+    objdir(ObjectDir)
+    debugdir(TargetDir)
 
     links {
-        "d3d11.lib"
+        "d3d11.lib",
+        "D3DCompiler.lib",
+        "dxguid.lib"
     }
 
     files {
         "Azazel/src/**.cpp",
-        "Azazel/src/**.h"
+        "Azazel/src/**.h",
+        "Azazel/src/**.hlsl"
     }
 
     includedirs {
@@ -37,3 +41,16 @@ project "Azazel"
     defines "DEBUG"
     runtime "Debug"
     symbols "on"
+
+-- Shaders
+    shaderobjectfileoutput("%{cfg.targetdir}/Resources/Shaders/%%(Filename).cso")
+
+    filter("files:Azazel/src/**_vs.hlsl")
+    shadertype("Vertex")
+    shadermodel "5.0"
+    filter {}
+    
+    filter("files:Azazel/src/**_ps.hlsl")
+    shadertype("Pixel")
+    shadermodel "5.0"
+    filter {}

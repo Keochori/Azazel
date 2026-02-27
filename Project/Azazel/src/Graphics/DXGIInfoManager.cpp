@@ -4,8 +4,6 @@
 #include <memory>
 #include "dxgidebug.h"
 
-#pragma comment(lib, "dxguid.lib")
-
 DXGIInfoManager::DXGIInfoManager()
 {
 	// Load the dll
@@ -78,6 +76,10 @@ std::vector<DXGIInfoMessage> DXGIInfoManager::GetMessages() const
 				break;
 
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
+				dxgiInfoMessage.mySeverity = Severity::eError;
+				break;
+
+			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
 				dxgiInfoMessage.mySeverity = Severity::eError;
 				break;
 		}

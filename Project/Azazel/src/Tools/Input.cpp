@@ -67,41 +67,41 @@ void Input::MouseInsideWindowUpdate(bool aState)
 	myMouseInsideWindow = aState;
 }
 
-bool Input::UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam)
+void Input::UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam)
 {
 	switch (message)
 	{
 		// Keyboard
 		case WM_KEYDOWN:
 			myTentativeState[wParam] = true;
-			return true;
+			break;
 		case WM_KEYUP:
 			myTentativeState[wParam] = false;
-			return true;
+			break;
 
 			// Mouse
 		case WM_LBUTTONDOWN:
 			myTentativeState[0x01] = true;
-			return true;
+			break;
 		case WM_LBUTTONUP:
 			myTentativeState[0x01] = false;
-			return true;
+			break;
 		case WM_RBUTTONDOWN:
 			myTentativeState[0x02] = true;
-			return true;
+			break;
 		case WM_RBUTTONUP:
 			myTentativeState[0x02] = false;
-			return true;
+			break;
 		case WM_MBUTTONDOWN:
 			myTentativeState[0x04] = true;
-			return true;
+			break;
 		case WM_MBUTTONUP:
 			myTentativeState[0x04] = false;
-			return true;
+			break;
 		case WM_MOUSEMOVE:
 			myTentativeMousePos.x = LOWORD(lParam);
 			myTentativeMousePos.y = HIWORD(lParam);
-			return true;
+			break;
 	}
 }
 

@@ -1,8 +1,12 @@
+// Models
+- 3D Models
+- Normal Maps
+- Textures
+- Animations
+
+// Engine
+- Add Configurations
 - PhysX
 - Deferred Rendering 
 - Entity Component System
 - ImGui
-- 3D Models
-- Textures
-- Animations
-- Add Configurations

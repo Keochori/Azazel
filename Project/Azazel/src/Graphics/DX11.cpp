@@ -1,9 +1,10 @@
 #include "pch.h"
 #include "DX11.h"
 #include <d3d11.h>
+#include <d3dcompiler.h>
 #include "DXGIInfoManager.h"
 
-DX11::DX11(HWND aHWND)
+DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 {
 	// Initialize DXGIInfoManager
 	myDXGIInfoManager = std::make_unique<DXGIInfoManager>();
@@ -60,21 +61,114 @@ DX11::~DX11()
 {
 }
 
+void DX11::DrawTestTriangle()
+{
+	// Create vertex buffer content
+	struct Vertex
+	{
+		float x;
+		float y;
+	};
+
+	const Vertex vertices[] = {
+		{0.0f, 0.5f},
+		{0.5f, -0.5f},
+		{-0.5f, -0.5f}
+	};
+
+	// Create Vertex Buffer
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.CPUAccessFlags = 0u;
+	bufferDesc.MiscFlags = 0u;
+	bufferDesc.ByteWidth = sizeof(vertices);
+	bufferDesc.StructureByteStride = sizeof(Vertex);
+
+	D3D11_SUBRESOURCE_DATA subResData = {};
+	subResData.pSysMem = vertices;
+
+	ComPtr<ID3D11Buffer> vertexBuffer;
+	HRASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &vertexBuffer));
+
+	// Bind Vertex Buffer to pipeline
+	const UINT stride = sizeof(Vertex);
+	const UINT offset = 0u;
+	DXASSERT(myContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset));
+
+	// Blob for loading shader data
+	ComPtr<ID3DBlob> blob;
+
+	// Create Pixel Shader
+	ComPtr<ID3D11PixelShader> pixelShader;
+	HRASSERT(D3DReadFileToBlob(L"Resources/Shaders/Default_ps.cso", &blob));
+	HRASSERT(myDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &pixelShader));
+
+	// Bind Pixel Shader
+	DXASSERT(myContext->PSSetShader(pixelShader.Get(), nullptr, 0u));
+
+	// Create Vertex Shader
+	ComPtr<ID3D11VertexShader> vertexShader;
+	HRASSERT(D3DReadFileToBlob(L"Resources/Shaders/Default_vs.cso", &blob));
+	HRASSERT(myDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vertexShader));
+
+	// Bind Vertex Shader
+	DXASSERT(myContext->VSSetShader(vertexShader.Get(), nullptr, 0u));
+
+	// Create Input Layout
+	ComPtr<ID3D11InputLayout> inputLayout;
+	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
+		{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0}
+	};
+
+	HRASSERT(myDevice->CreateInputLayout(inputElementDesc, (UINT)std::size(inputElementDesc), blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout));
+
+	// Bind Input Layout
+	DXASSERT(myContext->IASetInputLayout(inputLayout.Get()));
+
+	// Bind Render Target
+	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), nullptr));
+
+	// Set Primitive Topology
+	DXASSERT(myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+
+	// Configure viewport
+	D3D11_VIEWPORT viewport;
+	viewport.Width = GetScreenWidth();
+	viewport.Height = GetScreenHeight();
+	viewport.MinDepth = 0;
+	viewport.MaxDepth = 1;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	DXASSERT(myContext->RSSetViewports(1u, &viewport));
+
+	// Draw
+	DXASSERT(myContext->Draw((UINT)std::size(vertices), 0u));
+}
+
 void DX11::ClearBuffer(float r, float g, float b)
 {
 	const float color[] = { r,g,b,1.0f };
-	myContext->ClearRenderTargetView(myRTV.Get(), color);
+	DXASSERT(myContext->ClearRenderTargetView(myRTV.Get(), color));
 }
 
 void DX11::EndFrame()
 {
-	HRASSERT(mySwapChain->Present(1, 0));
+	DXASSERT(mySwapChain->Present(1, 0));
 }
 
 void DX11::HRESULTCheck(HRESULT aHr, const char* aFile, int aLine)
 {
-	bool HRSuccess = !FAILED(aHr);
+	bool HRFailed = FAILED(aHr);
 
+	DXAssertMessages(aFile, aLine);
+
+	Assert(!HRFailed);
+}
+
+void DX11::DXAssertMessages(const char* aFile, int aLine)
+{
+	bool error = false;
 	std::vector<DXGIInfoMessage> messages = myDXGIInfoManager->GetMessages();
 	for (DXGIInfoMessage& message : messages)
 	{
@@ -86,10 +180,29 @@ void DX11::HRESULTCheck(HRESULT aHr, const char* aFile, int aLine)
 
 			case Severity::eError:
 				LOG::Print(message.myDescription, aFile, aLine, LogType::eError);
+				error = true;
+				break;
 		}
 	}
 
 	myDXGIInfoManager->UpdateInfoQueuePosition();
-
-	Assert(HRSuccess);
+	Assert(!error);
 }
+
+int DX11::GetScreenWidth() const
+{
+	RECT rect;
+	GetClientRect(myHWND, &rect);
+
+	return rect.right - rect.left;
+}
+
+int DX11::GetScreenHeight() const
+{
+	RECT rect;
+	GetClientRect(myHWND, &rect);
+
+	return rect.bottom - rect.top;
+}
+
+

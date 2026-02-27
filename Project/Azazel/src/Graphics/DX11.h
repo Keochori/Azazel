@@ -14,25 +14,32 @@ class DXGIInfoManager;
 class DX11
 {
 public:
-	DX11(HWND aHWND);
+	DX11(HWND& aHWND);
 	DX11(const DX11&) = delete;
 	DX11& operator=(const DX11&) = delete;
 	~DX11();
+
+	void DrawTestTriangle();
 
 	// Remove Later
 	void ClearBuffer(float r, float g, float b);
 
 	void EndFrame();
 
-
 private:
 #define HRASSERT(hr) HRESULTCheck(hr, __FILE__, __LINE__)
+#define DXASSERT(func) (func); DXAssertMessages(__FILE__, __LINE__)
 	void HRESULTCheck(HRESULT aHr, const char* aFile, int aLine);
+	void DXAssertMessages(const char* aFile, int aLine);
+	int GetScreenWidth() const;
+	int GetScreenHeight() const;
 
 	ComPtr<ID3D11Device> myDevice = nullptr;
 	ComPtr<ID3D11DeviceContext> myContext = nullptr;
 	ComPtr<IDXGISwapChain> mySwapChain = nullptr;
 	ComPtr<ID3D11RenderTargetView> myRTV = nullptr;
 	std::unique_ptr<DXGIInfoManager> myDXGIInfoManager;
+
+	HWND myHWND;
 };
 

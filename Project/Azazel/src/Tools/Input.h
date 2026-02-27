@@ -263,7 +263,7 @@ public:
 	void ResetMouseDelta();
 	bool GetMouseInsideWindow() const;
 	void MouseInsideWindowUpdate(bool aState);
-	bool UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam);
+	void UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam);
 	void UpdateStates();
 
 private:

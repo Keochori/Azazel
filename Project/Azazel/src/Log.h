@@ -4,6 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <assert.h>
+#include <crtdbg.h>
 
 enum LogType
 {

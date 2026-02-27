@@ -3,7 +3,7 @@
 #include "Tools/Input.h"
 #include "Graphics/DX11.h"
 
-Engine::Engine(HWND aHWND)
+Engine::Engine(HWND& aHWND)
 {
 	myDX11Framework = std::make_unique<DX11>(aHWND);
 }
@@ -19,6 +19,8 @@ void Engine::Update()
 	green += addValue * 5;
 	blue += addValue / 6;
 	myDX11Framework->ClearBuffer(red, green, blue);
+
+	myDX11Framework->DrawTestTriangle();
 
 	if (INPUT.IsKeyPressed(eKeys::G))
 	{

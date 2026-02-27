@@ -6,7 +6,7 @@ class DX11;
 class Engine
 {
 public:
-	Engine(HWND aHWND);
+	Engine(HWND& aHWND);
 	~Engine();
 
 	void Update();
