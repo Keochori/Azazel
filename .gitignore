@@ -73,5 +73,6 @@
 
 # Executables
 *.exe
+!premake5.exe
 *.out
 *.app
