@@ -3,6 +3,7 @@
 - Normal Maps
 - Textures
 - Animations
+- Transparency
 
 // Engine
 - Add Configurations
@@ -10,3 +11,10 @@
 - Deferred Rendering 
 - Entity Component System
 - ImGui
+- Skybox
+- Gizmo
+- Render States
+
+// Windows
+- Icon
+
