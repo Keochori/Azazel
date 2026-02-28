@@ -13,6 +13,6 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           template: "avatar-with-link"
-          message: "New commit to **{{ github.context.payload.repository.name}}**"
+          message: "New commit to **{{ github.context.payload.repository.name}}!**"
           last-commit-only: true
       

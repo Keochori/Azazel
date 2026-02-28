@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Window.h"
 #include "Tools/Input.h"
+#include "resource.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -44,15 +45,16 @@ Window::~Window()
 {
 }
 
-void Window::CreateAndRegisterWindowClass(HINSTANCE& hInstance, LPCWSTR className)
+void Window::CreateAndRegisterWindowClass(HINSTANCE& aHInstance, LPCWSTR aClassName)
 {
-	LPCWSTR CLASS_NAME = className;
+	LPCWSTR CLASS_NAME = aClassName;
 
 	WNDCLASS wc = { };
 
 	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
+	wc.hInstance = aHInstance;
 	wc.lpszClassName = CLASS_NAME;
+	wc.hIcon = LoadIcon(aHInstance, MAKEINTRESOURCE(IDI_ICON1)); // Load custom icon
 
 	RegisterClass(&wc);
 }

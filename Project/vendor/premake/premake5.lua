@@ -27,13 +27,15 @@ project "Azazel"
         "dxguid.lib"
     }
 
-    files {
+files {
+        "Azazel/resources/*",
         "Azazel/src/**.cpp",
         "Azazel/src/**.h",
         "Azazel/src/**.hlsl"
     }
 
-    includedirs {
+includedirs {
+        "Azazel/resources",
         "Azazel/src"
     }
 

@@ -11,7 +11,7 @@ public:
     HWND& GetHWND();
 
 private:
-    void CreateAndRegisterWindowClass(HINSTANCE& hInstance, LPCWSTR className);
+    void CreateAndRegisterWindowClass(HINSTANCE& aHInstance, LPCWSTR aClassName);
     void UpdateMouseInsideWindow();
 
     HINSTANCE myHInstance;
