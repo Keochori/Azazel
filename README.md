@@ -1,9 +1,7 @@
 <h1>
-  <img src=".github/assets/azazel_icon.png" alt="Azazel Logo" title="Azazel" width="50" style="vertical-align: middle;">
   Azazel
+  <img src=".github/assets/azazel_icon.png" alt="Azazel Logo" title="Azazel" width="50" style="vertical-align: middle;">
 </h1>
-
-# Azazel
 Azazel is a 3D Game Engine using DirectX11.
 
 **How to run Azazel:**
