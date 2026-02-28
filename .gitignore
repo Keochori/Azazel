@@ -5,6 +5,7 @@
 *.filters
 *.recipe
 *.idb
+*.cso
 
 # User-specific files
 *.rsuser
