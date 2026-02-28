@@ -101,7 +101,7 @@ void DX11::DrawTestTriangle()
 
 	// Create Pixel Shader
 	ComPtr<ID3D11PixelShader> pixelShader;
-	HRASSERT(D3DReadFileToBlob(L"Resources/Shaders/Default_ps.cso", &blob));
+	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_ps.cso", &blob));
 	HRASSERT(myDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &pixelShader));
 
 	// Bind Pixel Shader
@@ -109,7 +109,7 @@ void DX11::DrawTestTriangle()
 
 	// Create Vertex Shader
 	ComPtr<ID3D11VertexShader> vertexShader;
-	HRASSERT(D3DReadFileToBlob(L"Resources/Shaders/Default_vs.cso", &blob));
+	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_vs.cso", &blob));
 	HRASSERT(myDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vertexShader));
 
 	// Bind Vertex Shader

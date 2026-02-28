@@ -45,7 +45,7 @@ includedirs {
     symbols "on"
 
 -- Shaders
-    shaderobjectfileoutput("%{cfg.targetdir}/Resources/Shaders/%%(Filename).cso")
+    shaderobjectfileoutput("%{cfg.targetdir}/resources/shaders/%%(Filename).cso")
 
     filter("files:Azazel/src/**_vs.hlsl")
     shadertype("Vertex")
