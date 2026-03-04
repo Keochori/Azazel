@@ -2,10 +2,9 @@
 #include "Input.h"
 #include <windowsx.h>
 
-Input Input::ourInstance;
-
 Input& Input::GetInstance()
 {
+	static Input ourInstance;
 	return ourInstance;
 }
 
