@@ -1,14 +1,17 @@
 #include "pch.h"
 #include "Window.h"
 #include "Tools/Input.h"
+#include "Tools/Timer.h"
 #include "Engine.h"
 
 int main()
 {
-	LOG_SUCCESS("STARTED AZAZEL");
+	TIMER.Initialize();
 
 	Window window;
 	Engine engine(window.GetHWND());
+
+	LOG_SUCCESS("STARTED AZAZEL");
 
 	bool running = true;
 	while (running)
@@ -20,6 +23,8 @@ int main()
 		}
 
 		// Main Loop
+		INPUT.UpdateStates();
+		TIMER.Update();
 		engine.Update();
 	}
 
