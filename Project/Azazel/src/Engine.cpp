@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "Engine.h"
-#include "Tools/Input.h"
 #include "Graphics/DX11.h"
+
+#include "Tools/Input.h"
+#include "Tools/Timer.h"
 
 Engine::Engine(HWND& aHWND)
 {
@@ -19,8 +21,7 @@ void Engine::Update()
 	green += addValue * 5;
 	blue += addValue / 6;
 	myDX11Framework->ClearBuffer(red, green, blue);
-
-	myDX11Framework->DrawTestTriangle();
+	myDX11Framework->DrawTestHexagon(TIMER.GetTotalTime());
 
 	if (INPUT.IsKeyPressed(eKeys::G))
 	{

@@ -74,7 +74,6 @@ bool Window::ProcessMessages()
 
 	// Custom Updates
 	UpdateMouseInsideWindow();
-	INPUT.UpdateStates();
 
 	return true;
 }

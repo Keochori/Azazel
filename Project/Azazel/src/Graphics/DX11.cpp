@@ -61,19 +61,26 @@ DX11::~DX11()
 {
 }
 
-void DX11::DrawTestTriangle()
+void DX11::DrawTestHexagon(float angle)
 {
 	// Create vertex buffer content
 	struct Vertex
 	{
 		float x;
 		float y;
+
+		float r;
+		float g;
+		float b;
 	};
 
 	const Vertex vertices[] = {
-		{0.0f, 0.5f},
-		{0.5f, -0.5f},
-		{-0.5f, -0.5f}
+		{0.0f, 0.5f, 1.0f,1.0f,0.0f},
+		{0.5f, -0.5f, 0.0f, 1.0f,0.0f},
+		{-0.5f, -0.5f, 0.0f, 0.0f, 1.0f},
+		{0.0f, -1.0f,1.0f,0.0f,0.0f},
+		{0.3f, 0.3f, 0.0f, 0.0f, 1.0f},
+		{-0.3f, 0.3f,0.0f,1.0f,0.0f},
 	};
 
 	// Create Vertex Buffer
@@ -95,6 +102,62 @@ void DX11::DrawTestTriangle()
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
 	DXASSERT(myContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset));
+
+	// Create Index Buffer
+	const unsigned short indices[] = {
+		0,1,2,
+		1,3,2,
+		0,4,1,
+		0,2,5,
+	};
+	ComPtr<ID3D11Buffer> indexBuffer;
+	bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	bufferDesc.CPUAccessFlags = 0u;
+	bufferDesc.MiscFlags = 0u;
+	bufferDesc.ByteWidth = sizeof(indices);
+	bufferDesc.StructureByteStride = sizeof(unsigned short);
+
+	subResData = {};
+	subResData.pSysMem = indices;
+	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &indexBuffer));
+
+	// Bind index Buffer
+	myContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+
+	// Create Constant Buffer
+	struct ConstantBuffer
+	{
+		struct
+		{
+			float element[4][4];
+		} transformation;
+	};
+	const ConstantBuffer cb =
+	{
+		{
+			(GetScreenHeight() / GetScreenWidth()) * std::cos(angle), std::sin(angle), 0.0f, 0.0f,
+			(GetScreenHeight() / GetScreenWidth()) * -std::sin(angle), std::cos(angle), 0.0f, 0.0f,
+			0.0f,			  0.0f,			   1.0f, 0.0f,
+			0.0f,			  0.0f,			   0.0f, 1.0f,
+		}
+	};
+	ComPtr<ID3D11Buffer> constantBuffer;
+	bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.MiscFlags = 0u;
+	bufferDesc.ByteWidth = sizeof(cb);
+	bufferDesc.StructureByteStride = sizeof(ConstantBuffer);
+
+	subResData = {};
+	subResData.pSysMem = &cb;
+	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &constantBuffer));
+
+	// Bind Constant Buffer
+	myContext->VSSetConstantBuffers(0u, 1u, constantBuffer.GetAddressOf());
 
 	// Blob for loading shader data
 	ComPtr<ID3DBlob> blob;
@@ -118,7 +181,8 @@ void DX11::DrawTestTriangle()
 	// Create Input Layout
 	ComPtr<ID3D11InputLayout> inputLayout;
 	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0}
+		{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"COLOR",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
 	};
 
 	HRASSERT(myDevice->CreateInputLayout(inputElementDesc, (UINT)std::size(inputElementDesc), blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout));
@@ -143,7 +207,7 @@ void DX11::DrawTestTriangle()
 	DXASSERT(myContext->RSSetViewports(1u, &viewport));
 
 	// Draw
-	DXASSERT(myContext->Draw((UINT)std::size(vertices), 0u));
+	DXASSERT(myContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
 }
 
 void DX11::ClearBuffer(float r, float g, float b)
@@ -189,20 +253,20 @@ void DX11::DXAssertMessages(const char* aFile, int aLine)
 	Assert(!error);
 }
 
-int DX11::GetScreenWidth() const
+float DX11::GetScreenWidth() const
 {
 	RECT rect;
 	GetClientRect(myHWND, &rect);
 
-	return rect.right - rect.left;
+	return (float)(rect.right - rect.left);
 }
 
-int DX11::GetScreenHeight() const
+float DX11::GetScreenHeight() const
 {
 	RECT rect;
 	GetClientRect(myHWND, &rect);
 
-	return rect.bottom - rect.top;
+	return (float)(rect.bottom - rect.top);
 }
 
 

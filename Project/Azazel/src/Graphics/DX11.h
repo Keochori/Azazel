@@ -19,7 +19,7 @@ public:
 	DX11& operator=(const DX11&) = delete;
 	~DX11();
 
-	void DrawTestTriangle();
+	void DrawTestHexagon(float angle);
 
 	// Remove Later
 	void ClearBuffer(float r, float g, float b);
@@ -31,8 +31,8 @@ private:
 #define DXASSERT(func) (func); DXAssertMessages(__FILE__, __LINE__)
 	void HRESULTCheck(HRESULT aHr, const char* aFile, int aLine);
 	void DXAssertMessages(const char* aFile, int aLine);
-	int GetScreenWidth() const;
-	int GetScreenHeight() const;
+	float GetScreenWidth() const;
+	float GetScreenHeight() const;
 
 	ComPtr<ID3D11Device> myDevice = nullptr;
 	ComPtr<ID3D11DeviceContext> myContext = nullptr;
