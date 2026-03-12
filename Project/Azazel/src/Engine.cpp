@@ -16,12 +16,11 @@ Engine::~Engine()
 
 void Engine::Update()
 {
-	float addValue = 0.0001f;
-	red += addValue / 2;
-	green += addValue * 5;
-	blue += addValue / 6;
-	myDX11Framework->ClearBuffer(red, green, blue);
-	myDX11Framework->DrawTestHexagon(TIMER.GetTotalTime());
+	myDX11Framework->BeginFrame();
+
+	myDX11Framework->ClearBuffer(0.2f, 0.2f, 0.2f);
+	myDX11Framework->DrawCube(TIMER.GetTotalTime() - 5.0f, 0.0f, 0.0f, 5.0f);
+	myDX11Framework->DrawCube(TIMER.GetTotalTime(), 2.0f,0.5f, 5.0f);
 
 	if (INPUT.IsKeyPressed(eKeys::G))
 	{

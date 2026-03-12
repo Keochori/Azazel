@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include "DXGIInfoManager.h"
+#include "DirectXMath.h"
 
 DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 {
@@ -55,32 +56,70 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 		nullptr,
 		&myRTV
 	));
+
+	// Create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
+	depthStencilDesc.DepthEnable = TRUE;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	ComPtr<ID3D11DepthStencilState> depthStencilState;
+	HRASSERT(myDevice->CreateDepthStencilState(&depthStencilDesc, &depthStencilState));
+
+	// Bind depth stencil state
+	DXASSERT(myContext->OMSetDepthStencilState(depthStencilState.Get(), 1u));
+
+	// Create depth stencil texture
+	ComPtr<ID3D11Texture2D> depthStencilTexture;
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = GetScreenWidth();
+	textureDesc.Height = GetScreenHeight();
+	textureDesc.MipLevels = 1u;
+	textureDesc.ArraySize = 1u;
+	textureDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	textureDesc.SampleDesc.Count = 1u;
+	textureDesc.SampleDesc.Quality = 0u;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	HRASSERT(myDevice->CreateTexture2D(&textureDesc, nullptr, &depthStencilTexture));
+
+	// Create view of depth stencil texture
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0u;
+	HRASSERT(myDevice->CreateDepthStencilView(depthStencilTexture.Get(), &dsvDesc, &myDSV));
+
+	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), myDSV.Get()));
 }
 
 DX11::~DX11()
 {
 }
 
-void DX11::DrawTestHexagon(float angle)
+void DX11::DrawCube(float angle, float x, float y, float z)
 {
 	// Create vertex buffer content
 	struct Vertex
 	{
-		float x;
-		float y;
-
-		float r;
-		float g;
-		float b;
+		struct
+		{
+			float x;
+			float y;
+			float z;
+		} pos;
 	};
 
-	const Vertex vertices[] = {
-		{0.0f, 0.5f, 1.0f,1.0f,0.0f},
-		{0.5f, -0.5f, 0.0f, 1.0f,0.0f},
-		{-0.5f, -0.5f, 0.0f, 0.0f, 1.0f},
-		{0.0f, -1.0f,1.0f,0.0f,0.0f},
-		{0.3f, 0.3f, 0.0f, 0.0f, 1.0f},
-		{-0.3f, 0.3f,0.0f,1.0f,0.0f},
+	const Vertex vertices[] = 
+	{
+		{-1.0f, -1.0f, -1.0f },
+		{1.0f, -1.0f, -1.0f  },
+		{-1.0f, 1.0f, -1.0f  },
+		{1.0f, 1.0f, -1.0f   },
+		{-1.0f, -1.0f, 1.0f  },
+		{1.0f, -1.0f, 1.0f   },
+		{-1.0f, 1.0f, 1.0f   },
+		{1.0f, 1.0f, 1.0f	 },
 	};
 
 	// Create Vertex Buffer
@@ -105,10 +144,12 @@ void DX11::DrawTestHexagon(float angle)
 
 	// Create Index Buffer
 	const unsigned short indices[] = {
-		0,1,2,
-		1,3,2,
-		0,4,1,
-		0,2,5,
+		0,3,1, 0,2,3, //back
+		4,2,0, 4,6,2, //l-side
+		5,1,3, 5,3,7, //r-side
+		6,3,2, 6,7,3, //up
+		4,1,5, 4,0,1, //down
+		4,7,6, 4,5,7, //front
 	};
 	ComPtr<ID3D11Buffer> indexBuffer;
 	bufferDesc = {};
@@ -129,18 +170,17 @@ void DX11::DrawTestHexagon(float angle)
 	// Create Constant Buffer
 	struct ConstantBuffer
 	{
-		struct
-		{
-			float element[4][4];
-		} transformation;
+		DirectX::XMMATRIX transform;
 	};
 	const ConstantBuffer cb =
 	{
 		{
-			(GetScreenHeight() / GetScreenWidth()) * std::cos(angle), std::sin(angle), 0.0f, 0.0f,
-			(GetScreenHeight() / GetScreenWidth()) * -std::sin(angle), std::cos(angle), 0.0f, 0.0f,
-			0.0f,			  0.0f,			   1.0f, 0.0f,
-			0.0f,			  0.0f,			   0.0f, 1.0f,
+			DirectX::XMMatrixTranspose(
+				DirectX::XMMatrixRotationX(angle)*
+				DirectX::XMMatrixRotationY(angle*0.1f)*
+				DirectX::XMMatrixTranslation(x,y,z)*
+				DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(),0.5f,10.f)
+			)
 		}
 	};
 	ComPtr<ID3D11Buffer> constantBuffer;
@@ -158,6 +198,45 @@ void DX11::DrawTestHexagon(float angle)
 
 	// Bind Constant Buffer
 	myContext->VSSetConstantBuffers(0u, 1u, constantBuffer.GetAddressOf());
+
+	// Cb2
+	struct ConstantBuffer2
+	{
+		struct
+		{
+			float r;
+			float g;
+			float b;
+			float a;
+		} face_colors[6];
+	};
+	const ConstantBuffer2 cb2 =
+	{
+		{
+			{1.0f,0.0f,1.0f},
+			{1.0f,0.0f,0.0f},
+			{0.0f,1.0f,0.0f},
+			{0.0f,0.0f,1.0f},
+			{1.0f,1.0f,0.0f},
+			{0.0f,1.0f,1.0f},
+		}
+	};
+
+	ComPtr<ID3D11Buffer> constantBuffer2;
+	bufferDesc = {};
+	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.MiscFlags = 0u;
+	bufferDesc.ByteWidth = sizeof(cb2);
+	bufferDesc.StructureByteStride = sizeof(ConstantBuffer2);
+
+	subResData = {};
+	subResData.pSysMem = &cb2;
+	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &constantBuffer2));
+
+	// Bind Constant Buffer
+	myContext->PSSetConstantBuffers(0u, 1u, constantBuffer2.GetAddressOf());
 
 	// Blob for loading shader data
 	ComPtr<ID3DBlob> blob;
@@ -181,17 +260,13 @@ void DX11::DrawTestHexagon(float angle)
 	// Create Input Layout
 	ComPtr<ID3D11InputLayout> inputLayout;
 	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{"POSITION",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"COLOR",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
 	};
 
 	HRASSERT(myDevice->CreateInputLayout(inputElementDesc, (UINT)std::size(inputElementDesc), blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout));
 
 	// Bind Input Layout
 	DXASSERT(myContext->IASetInputLayout(inputLayout.Get()));
-
-	// Bind Render Target
-	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), nullptr));
 
 	// Set Primitive Topology
 	DXASSERT(myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
@@ -210,10 +285,16 @@ void DX11::DrawTestHexagon(float angle)
 	DXASSERT(myContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
 }
 
+void DX11::BeginFrame()
+{
+	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), myDSV.Get()));
+}
+
 void DX11::ClearBuffer(float r, float g, float b)
 {
 	const float color[] = { r,g,b,1.0f };
 	DXASSERT(myContext->ClearRenderTargetView(myRTV.Get(), color));
+	DXASSERT(myContext->ClearDepthStencilView(myDSV.Get(), D3D11_CLEAR_DEPTH,1.0f,0u));
 }
 
 void DX11::EndFrame()
