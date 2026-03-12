@@ -13,10 +13,5 @@ public:
 
 private:
 	std::unique_ptr<DX11> myDX11Framework;
-
-	// Remove later
-	float red = 0;
-	float green = 0;
-	float blue = 0;
 };
 

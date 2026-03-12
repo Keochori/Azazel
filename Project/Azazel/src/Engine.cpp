@@ -18,7 +18,8 @@ void Engine::Update()
 {
 	myDX11Framework->BeginFrame();
 
-	myDX11Framework->ClearBuffer(0.2f, 0.2f, 0.2f);
+	const float color[] = { 0.2f,0.2f,0.2f,1.0f };
+	myDX11Framework->ClearBuffer(color);
 	myDX11Framework->DrawCube(TIMER.GetTotalTime() - 5.0f, 0.0f, 0.0f, 5.0f);
 	myDX11Framework->DrawCube(TIMER.GetTotalTime(), 2.0f,0.5f, 5.0f);
 

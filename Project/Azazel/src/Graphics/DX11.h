@@ -10,6 +10,7 @@ struct ID3D11DeviceContext;
 struct IDXGISwapChain;
 struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
+
 class DXGIInfoManager;
 
 class DX11
@@ -20,10 +21,14 @@ public:
 	DX11& operator=(const DX11&) = delete;
 	~DX11();
 
+	void CreateDeviceAndSwapChainAndContext();
+	void CreateRTV();
+	void CreateDSV();
+
 	void DrawCube(float angle, float x, float y, float z);
 
 	void BeginFrame();
-	void ClearBuffer(float r, float g, float b);
+	void ClearBuffer(const float color[]);
 	void EndFrame();
 
 private:
@@ -39,8 +44,8 @@ private:
 	ComPtr<IDXGISwapChain> mySwapChain = nullptr;
 	ComPtr<ID3D11RenderTargetView> myRTV = nullptr;
 	ComPtr<ID3D11DepthStencilView> myDSV = nullptr;
-	std::unique_ptr<DXGIInfoManager> myDXGIInfoManager;
 
+	std::unique_ptr<DXGIInfoManager> myDXGIInfoManager;
 	HWND myHWND;
 };
 

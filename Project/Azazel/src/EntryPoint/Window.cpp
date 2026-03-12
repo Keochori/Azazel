@@ -37,7 +37,9 @@ Window::Window() : myHInstance(GetModuleHandle(nullptr))
 	// Set window position and size
 	int width = 1500;
 	int height = 902;
-	SetWindowPos(hwnd, nullptr, 190, 80, width, height, 0);
+	int posX = 190;
+	int posY = 80;
+	SetWindowPos(hwnd, nullptr, posX, posY, width, height, 0);
 	ShowWindow(hwnd, SW_SHOW);
 }
 

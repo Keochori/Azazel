@@ -11,6 +11,17 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	myDXGIInfoManager = std::make_unique<DXGIInfoManager>();
 	myDXGIInfoManager->UpdateInfoQueuePosition();
 
+	CreateDeviceAndSwapChainAndContext();
+	CreateRTV();
+	CreateDSV();
+}
+
+DX11::~DX11()
+{
+}
+
+void DX11::CreateDeviceAndSwapChainAndContext()
+{
 	// Swap Chain Desc
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferDesc.Width = 0;
@@ -24,7 +35,7 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.BufferCount = 2;
-	swapChainDesc.OutputWindow = aHWND;
+	swapChainDesc.OutputWindow = myHWND;
 	swapChainDesc.Windowed = TRUE;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.Flags = 0;
@@ -44,20 +55,25 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 		nullptr,
 		&myContext
 	));
+}
 
-	// Create RTV
+void DX11::CreateRTV()
+{
+	// Get Backbuffer
 	ComPtr<ID3D11Resource> backBuffer = nullptr;
 	HRASSERT(mySwapChain->GetBuffer(0, __uuidof(ID3D11Resource), &backBuffer));
-	if (!backBuffer)
-		return;
 
+	// Create RTV
 	HRASSERT(myDevice->CreateRenderTargetView(
 		backBuffer.Get(),
 		nullptr,
 		&myRTV
 	));
+}
 
-	// Create depth stencil state
+void DX11::CreateDSV()
+{
+	// Create Depth Stencil State
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
 	depthStencilDesc.DepthEnable = TRUE;
 	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -66,10 +82,10 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	ComPtr<ID3D11DepthStencilState> depthStencilState;
 	HRASSERT(myDevice->CreateDepthStencilState(&depthStencilDesc, &depthStencilState));
 
-	// Bind depth stencil state
+	// Bind Depth Stencil State
 	DXASSERT(myContext->OMSetDepthStencilState(depthStencilState.Get(), 1u));
 
-	// Create depth stencil texture
+	// Create Depth Stencil Texture
 	ComPtr<ID3D11Texture2D> depthStencilTexture;
 	D3D11_TEXTURE2D_DESC textureDesc = {};
 	textureDesc.Width = GetScreenWidth();
@@ -83,18 +99,12 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	HRASSERT(myDevice->CreateTexture2D(&textureDesc, nullptr, &depthStencilTexture));
 
-	// Create view of depth stencil texture
+	// Create DSV
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Texture2D.MipSlice = 0u;
 	HRASSERT(myDevice->CreateDepthStencilView(depthStencilTexture.Get(), &dsvDesc, &myDSV));
-
-	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), myDSV.Get()));
-}
-
-DX11::~DX11()
-{
 }
 
 void DX11::DrawCube(float angle, float x, float y, float z)
@@ -287,18 +297,20 @@ void DX11::DrawCube(float angle, float x, float y, float z)
 
 void DX11::BeginFrame()
 {
+	// Bind RTV and DSV
 	DXASSERT(myContext->OMSetRenderTargets(1u, myRTV.GetAddressOf(), myDSV.Get()));
 }
 
-void DX11::ClearBuffer(float r, float g, float b)
+void DX11::ClearBuffer(const float color[])
 {
-	const float color[] = { r,g,b,1.0f };
+	// Clear RTV and DSV
 	DXASSERT(myContext->ClearRenderTargetView(myRTV.Get(), color));
 	DXASSERT(myContext->ClearDepthStencilView(myDSV.Get(), D3D11_CLEAR_DEPTH,1.0f,0u));
 }
 
 void DX11::EndFrame()
 {
+	// Present frame
 	DXASSERT(mySwapChain->Present(1, 0));
 }
 
