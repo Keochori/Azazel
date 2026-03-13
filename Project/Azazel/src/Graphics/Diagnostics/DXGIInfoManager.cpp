@@ -1,10 +1,23 @@
 #include "pch.h"
 #include "DXGIInfoManager.h"
-
 #include <memory>
 #include "dxgidebug.h"
 
+DXGIInfoManager& DXGIInfoManager::GetInstance()
+{
+	static DXGIInfoManager ourInstance;
+	return ourInstance;
+}
+
 DXGIInfoManager::DXGIInfoManager()
+{
+}
+
+DXGIInfoManager::~DXGIInfoManager()
+{
+}
+
+void DXGIInfoManager::Init()
 {
 	// Load the dll
 	const HMODULE dxgidebugDLL = LoadLibraryEx(L"dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
@@ -30,10 +43,8 @@ DXGIInfoManager::DXGIInfoManager()
 		LOG_ERROR("Couldn't use DXGIGetDebugInterface function correctly");
 		return;
 	}
-}
 
-DXGIInfoManager::~DXGIInfoManager()
-{
+	UpdateInfoQueuePosition();
 }
 
 void DXGIInfoManager::UpdateInfoQueuePosition()
@@ -72,15 +83,15 @@ std::vector<DXGIInfoMessage> DXGIInfoManager::GetMessages() const
 		switch (message->Severity)
 		{
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING:
-				dxgiInfoMessage.mySeverity = Severity::eWarning;
+				dxgiInfoMessage.mySeverity = eSeverity::Warning;
 				break;
 
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
-				dxgiInfoMessage.mySeverity = Severity::eError;
+				dxgiInfoMessage.mySeverity = eSeverity::Error;
 				break;
 
 			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
-				dxgiInfoMessage.mySeverity = Severity::eError;
+				dxgiInfoMessage.mySeverity = eSeverity::Error;
 				break;
 		}
 		messages.emplace_back(dxgiInfoMessage);

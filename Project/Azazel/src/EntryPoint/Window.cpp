@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Window.h"
 #include "Tools/Input.h"
-#include "resource.h"
+#include "Icon/resource.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

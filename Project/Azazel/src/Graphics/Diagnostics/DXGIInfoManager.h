@@ -5,17 +5,17 @@ using namespace Microsoft::WRL;
 
 struct IDXGIInfoQueue;
 
-enum class Severity
+enum class eSeverity
 {
-	eWarning,
-	eError,
-	eOther
+	Warning,
+	Error,
+	Other
 };
 
 struct DXGIInfoMessage
 {
 	std::string myDescription;
-	Severity mySeverity = Severity::eOther;
+	eSeverity mySeverity = eSeverity::Other;
 };
 
 class DXGIInfoManager
@@ -23,6 +23,11 @@ class DXGIInfoManager
 public:
 	DXGIInfoManager();
 	~DXGIInfoManager();
+	DXGIInfoManager(const DXGIInfoManager&) = delete;
+	DXGIInfoManager& operator=(const DXGIInfoManager&) = delete;
+
+	void Init();
+	static DXGIInfoManager& GetInstance();
 
 	void UpdateInfoQueuePosition();
 	std::vector<DXGIInfoMessage> GetMessages() const;

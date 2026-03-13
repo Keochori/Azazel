@@ -1,19 +1,29 @@
 #include "pch.h"
 #include "DX11.h"
-#include <d3d11.h>
-#include <d3dcompiler.h>
-#include "DXGIInfoManager.h"
 #include "DirectXMath.h"
+#include "Diagnostics/DXASSERT.h"
+#include "Bindables/VertexShader.h"
+#include "Bindables/PixelShader.h"
+
+// Remove later
+#include "Bindables/InputLayout.h"
+#include "Bindables/VertexBuffer.h"
+#include "Bindables/IndexBuffer.h"
+#include "Bindables/ConstantBuffer.hpp"
 
 DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 {
 	// Initialize DXGIInfoManager
-	myDXGIInfoManager = std::make_unique<DXGIInfoManager>();
-	myDXGIInfoManager->UpdateInfoQueuePosition();
+	DXGIInfoManager::GetInstance().Init();
 
 	CreateDeviceAndSwapChainAndContext();
 	CreateRTV();
 	CreateDSV();
+
+	SetPrimitiveTopology();
+	SetViewPort();
+	SetDefaultVS();
+	SetDefaultPS();
 }
 
 DX11::~DX11()
@@ -107,181 +117,27 @@ void DX11::CreateDSV()
 	HRASSERT(myDevice->CreateDepthStencilView(depthStencilTexture.Get(), &dsvDesc, &myDSV));
 }
 
-void DX11::DrawCube(float angle, float x, float y, float z)
+void DX11::SetDefaultVS()
 {
-	// Create vertex buffer content
-	struct Vertex
-	{
-		struct
-		{
-			float x;
-			float y;
-			float z;
-		} pos;
-	};
+	VertexShader vertexShader;
+	vertexShader.Create(*this);
+	vertexShader.Bind(*this);
+}
 
-	const Vertex vertices[] = 
-	{
-		{-1.0f, -1.0f, -1.0f },
-		{1.0f, -1.0f, -1.0f  },
-		{-1.0f, 1.0f, -1.0f  },
-		{1.0f, 1.0f, -1.0f   },
-		{-1.0f, -1.0f, 1.0f  },
-		{1.0f, -1.0f, 1.0f   },
-		{-1.0f, 1.0f, 1.0f   },
-		{1.0f, 1.0f, 1.0f	 },
-	};
+void DX11::SetDefaultPS()
+{
+	PixelShader pixelShader;
+	pixelShader.Create(*this);
+	pixelShader.Bind(*this);
+}
 
-	// Create Vertex Buffer
-	D3D11_BUFFER_DESC bufferDesc = {};
-	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.CPUAccessFlags = 0u;
-	bufferDesc.MiscFlags = 0u;
-	bufferDesc.ByteWidth = sizeof(vertices);
-	bufferDesc.StructureByteStride = sizeof(Vertex);
-
-	D3D11_SUBRESOURCE_DATA subResData = {};
-	subResData.pSysMem = vertices;
-
-	ComPtr<ID3D11Buffer> vertexBuffer;
-	HRASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &vertexBuffer));
-
-	// Bind Vertex Buffer to pipeline
-	const UINT stride = sizeof(Vertex);
-	const UINT offset = 0u;
-	DXASSERT(myContext->IASetVertexBuffers(0u, 1u, vertexBuffer.GetAddressOf(), &stride, &offset));
-
-	// Create Index Buffer
-	const unsigned short indices[] = {
-		0,3,1, 0,2,3, //back
-		4,2,0, 4,6,2, //l-side
-		5,1,3, 5,3,7, //r-side
-		6,3,2, 6,7,3, //up
-		4,1,5, 4,0,1, //down
-		4,7,6, 4,5,7, //front
-	};
-	ComPtr<ID3D11Buffer> indexBuffer;
-	bufferDesc = {};
-	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	bufferDesc.CPUAccessFlags = 0u;
-	bufferDesc.MiscFlags = 0u;
-	bufferDesc.ByteWidth = sizeof(indices);
-	bufferDesc.StructureByteStride = sizeof(unsigned short);
-
-	subResData = {};
-	subResData.pSysMem = indices;
-	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &indexBuffer));
-
-	// Bind index Buffer
-	myContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-
-	// Create Constant Buffer
-	struct ConstantBuffer
-	{
-		DirectX::XMMATRIX transform;
-	};
-	const ConstantBuffer cb =
-	{
-		{
-			DirectX::XMMatrixTranspose(
-				DirectX::XMMatrixRotationX(angle)*
-				DirectX::XMMatrixRotationY(angle*0.1f)*
-				DirectX::XMMatrixTranslation(x,y,z)*
-				DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(),0.5f,10.f)
-			)
-		}
-	};
-	ComPtr<ID3D11Buffer> constantBuffer;
-	bufferDesc = {};
-	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	bufferDesc.MiscFlags = 0u;
-	bufferDesc.ByteWidth = sizeof(cb);
-	bufferDesc.StructureByteStride = sizeof(ConstantBuffer);
-
-	subResData = {};
-	subResData.pSysMem = &cb;
-	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &constantBuffer));
-
-	// Bind Constant Buffer
-	myContext->VSSetConstantBuffers(0u, 1u, constantBuffer.GetAddressOf());
-
-	// Cb2
-	struct ConstantBuffer2
-	{
-		struct
-		{
-			float r;
-			float g;
-			float b;
-			float a;
-		} face_colors[6];
-	};
-	const ConstantBuffer2 cb2 =
-	{
-		{
-			{1.0f,0.0f,1.0f},
-			{1.0f,0.0f,0.0f},
-			{0.0f,1.0f,0.0f},
-			{0.0f,0.0f,1.0f},
-			{1.0f,1.0f,0.0f},
-			{0.0f,1.0f,1.0f},
-		}
-	};
-
-	ComPtr<ID3D11Buffer> constantBuffer2;
-	bufferDesc = {};
-	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	bufferDesc.MiscFlags = 0u;
-	bufferDesc.ByteWidth = sizeof(cb2);
-	bufferDesc.StructureByteStride = sizeof(ConstantBuffer2);
-
-	subResData = {};
-	subResData.pSysMem = &cb2;
-	DXASSERT(myDevice->CreateBuffer(&bufferDesc, &subResData, &constantBuffer2));
-
-	// Bind Constant Buffer
-	myContext->PSSetConstantBuffers(0u, 1u, constantBuffer2.GetAddressOf());
-
-	// Blob for loading shader data
-	ComPtr<ID3DBlob> blob;
-
-	// Create Pixel Shader
-	ComPtr<ID3D11PixelShader> pixelShader;
-	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_ps.cso", &blob));
-	HRASSERT(myDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &pixelShader));
-
-	// Bind Pixel Shader
-	DXASSERT(myContext->PSSetShader(pixelShader.Get(), nullptr, 0u));
-
-	// Create Vertex Shader
-	ComPtr<ID3D11VertexShader> vertexShader;
-	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_vs.cso", &blob));
-	HRASSERT(myDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &vertexShader));
-
-	// Bind Vertex Shader
-	DXASSERT(myContext->VSSetShader(vertexShader.Get(), nullptr, 0u));
-
-	// Create Input Layout
-	ComPtr<ID3D11InputLayout> inputLayout;
-	const D3D11_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-	};
-
-	HRASSERT(myDevice->CreateInputLayout(inputElementDesc, (UINT)std::size(inputElementDesc), blob->GetBufferPointer(), blob->GetBufferSize(), &inputLayout));
-
-	// Bind Input Layout
-	DXASSERT(myContext->IASetInputLayout(inputLayout.Get()));
-
-	// Set Primitive Topology
+void DX11::SetPrimitiveTopology()
+{
 	DXASSERT(myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+}
 
-	// Configure viewport
+void DX11::SetViewPort()
+{
 	D3D11_VIEWPORT viewport;
 	viewport.Width = GetScreenWidth();
 	viewport.Height = GetScreenHeight();
@@ -290,9 +146,6 @@ void DX11::DrawCube(float angle, float x, float y, float z)
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	DXASSERT(myContext->RSSetViewports(1u, &viewport));
-
-	// Draw
-	DXASSERT(myContext->DrawIndexed((UINT)std::size(indices), 0u, 0u));
 }
 
 void DX11::BeginFrame()
@@ -314,36 +167,86 @@ void DX11::EndFrame()
 	DXASSERT(mySwapChain->Present(1, 0));
 }
 
-void DX11::HRESULTCheck(HRESULT aHr, const char* aFile, int aLine)
+void DX11::DrawCube(float angle, float x, float y, float z)
 {
-	bool HRFailed = FAILED(aHr);
+	// Create and Bind Vertex Buffer
+	VertexBuffer vertexBuffer({
+		{-1.0f, -1.0f, -1.0f },
+		{1.0f, -1.0f, -1.0f  },
+		{-1.0f, 1.0f, -1.0f  },
+		{1.0f, 1.0f, -1.0f   },
+		{-1.0f, -1.0f, 1.0f  },
+		{1.0f, -1.0f, 1.0f   },
+		{-1.0f, 1.0f, 1.0f   },
+		{1.0f, 1.0f, 1.0f	 },
+		});
+	vertexBuffer.Create(*this);
+	vertexBuffer.Bind(*this);
 
-	DXAssertMessages(aFile, aLine);
+	// Create and Bind Index Buffer
+	std::vector<unsigned short> indices = {
+		0,3,1, 0,2,3, //back
+		4,2,0, 4,6,2, //l-side
+		5,1,3, 5,3,7, //r-side
+		6,3,2, 6,7,3, //up
+		4,1,5, 4,0,1, //down
+		4,7,6, 4,5,7, //front
+	};
+	IndexBuffer indexBuffer(indices);
+	indexBuffer.Create(*this);
+	indexBuffer.Bind(*this);
 
-	Assert(!HRFailed);
+	// Create and Bind Transform Buffer
+	ConstantBuffer<TransformBuffer> transformBuffer(
+		eBindType::VS, 
+		TransformBuffer({
+			DirectX::XMMatrixTranspose(
+			DirectX::XMMatrixRotationX(angle) *
+			DirectX::XMMatrixRotationY(angle * 0.1f) *
+			DirectX::XMMatrixTranslation(x, y, z) *
+			DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(), 0.5f, 10.f))
+		})
+	);
+
+	transformBuffer.Create(*this);
+	transformBuffer.Bind(*this);
+
+	// Create and Bind Color Buffer
+	ConstantBuffer<ColorBuffer> colorBuffer(
+		eBindType::PS, 
+		ColorBuffer({
+			DirectX::XMVectorSet(1.0f,0.0f,1.0f,0.0f),
+			DirectX::XMVectorSet(1.0f,0.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,0.0f,1.0f,0.0f),
+			DirectX::XMVectorSet(1.0f,1.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,1.0f,1.0f,0.0f)
+		})
+	);
+	colorBuffer.Create(*this);
+	colorBuffer.Bind(*this);
+
+	// Create Input Layout
+	InputLayout inputLayout(
+		{
+			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		});
+
+	inputLayout.Create(*this);
+	inputLayout.Bind(*this);
+
+	// Draw
+	DXASSERT(myContext->DrawIndexed((UINT)indices.size(), 0u, 0u));
 }
 
-void DX11::DXAssertMessages(const char* aFile, int aLine)
+ComPtr<ID3D11Device> DX11::GetDevice() const
 {
-	bool error = false;
-	std::vector<DXGIInfoMessage> messages = myDXGIInfoManager->GetMessages();
-	for (DXGIInfoMessage& message : messages)
-	{
-		switch (message.mySeverity)
-		{
-			case Severity::eWarning:
-				LOG::Print(message.myDescription, aFile, aLine, LogType::eWarning);
-				break;
+	return myDevice;
+}
 
-			case Severity::eError:
-				LOG::Print(message.myDescription, aFile, aLine, LogType::eError);
-				error = true;
-				break;
-		}
-	}
-
-	myDXGIInfoManager->UpdateInfoQueuePosition();
-	Assert(!error);
+ComPtr<ID3D11DeviceContext> DX11::GetContext() const
+{
+	return myContext;
 }
 
 float DX11::GetScreenWidth() const
