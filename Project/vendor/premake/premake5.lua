@@ -28,7 +28,7 @@ project "Azazel"
     }
 
 files {
-        "Azazel/resources/*",
+        "Azazel/resources/**",
         "Azazel/src/**.cpp",
         "Azazel/src/**.h",
         "Azazel/src/**.hlsl"
