@@ -63,8 +63,6 @@ Project/bin/
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
-!Project/Azazel/**/*.dll
 
 # Fortran module files
 *.mod
@@ -74,7 +72,6 @@ Project/bin/
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
 *.exe
