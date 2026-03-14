@@ -21,23 +21,34 @@ project "Azazel"
     objdir(ObjectDir)
     debugdir(TargetDir)
 
+    AssimpDLL = "Azazel/vendor/assimp/assimp-vc143-mt.dll"
+    postbuildcommands { 
+        "{MKDIR} %{cfg.targetdir}/resources/meshes",
+        "{COPYDIR} %{prj.location}../Assets/Meshes %{cfg.targetdir}/resources/meshes",
+        "{COPYFILE} %[" .. AssimpDLL .. "] %{cfg.targetdir}",
+    }
+
     links {
         "d3d11.lib",
         "D3DCompiler.lib",
-        "dxguid.lib"
-    }
+        "dxguid.lib",
+        "lib/assimp-vc143-mt.lib"
+        }   
 
-files {
+    files {
         "Azazel/resources/**",
         "Azazel/src/**.cpp",
+        "Azazel/src/**.hpp",
         "Azazel/src/**.h",
-        "Azazel/src/**.hlsl"
-    }
+        "Azazel/src/**.hlsl",
+        "Azazel/vendor/assimp/**"
+        }
 
-includedirs {
+    includedirs {
         "Azazel/resources",
-        "Azazel/src"
-    }
+        "Azazel/src",
+        "Azazel/vendor"
+        }
 
     filter "configurations:Debug"
     defines "DEBUG"

@@ -24,6 +24,8 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	SetViewPort();
 	SetDefaultVS();
 	SetDefaultPS();
+
+	myAssetHandler.LoadMesh("gremlin.fbx");
 }
 
 DX11::~DX11()
@@ -237,6 +239,64 @@ void DX11::DrawCube(float angle, float x, float y, float z)
 
 	// Draw
 	DXASSERT(myContext->DrawIndexed((UINT)indices.size(), 0u, 0u));
+}
+
+void DX11::DrawGremlin(float angle, float x, float y, float z)
+{
+	Mesh gremlin = myAssetHandler.GetMesh("gremlin.fbx");
+
+	// Create and Bind Vertex Buffer
+	VertexBuffer vertexBuffer(gremlin.myVertices);
+	vertexBuffer.Create(*this);
+	vertexBuffer.Bind(*this);
+
+	// Create and Bind Index Buffer
+	IndexBuffer indexBuffer(gremlin.myIndices);
+	indexBuffer.Create(*this);
+	indexBuffer.Bind(*this);
+
+	// Create and Bind Transform Buffer
+	ConstantBuffer<TransformBuffer> transformBuffer(
+		eBindType::VS,
+		TransformBuffer({
+			DirectX::XMMatrixTranspose(
+				DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f) *
+				DirectX::XMMatrixRotationX(0.0f) *
+				DirectX::XMMatrixRotationY(angle) *
+				DirectX::XMMatrixTranslation(x, y, z) *
+				DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(), 0.5f, 10.f))
+			})
+	);
+
+	transformBuffer.Create(*this);
+	transformBuffer.Bind(*this);
+
+	// Create and Bind Color Buffer
+	ConstantBuffer<ColorBuffer> colorBuffer(
+		eBindType::PS,
+		ColorBuffer({
+			DirectX::XMVectorSet(1.0f,0.0f,1.0f,0.0f),
+			DirectX::XMVectorSet(1.0f,0.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,0.0f,1.0f,0.0f),
+			DirectX::XMVectorSet(1.0f,1.0f,0.0f,0.0f),
+			DirectX::XMVectorSet(0.0f,1.0f,1.0f,0.0f)
+			})
+	);
+	colorBuffer.Create(*this);
+	colorBuffer.Bind(*this);
+
+	// Create Input Layout
+	InputLayout inputLayout(
+		{
+			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+		});
+
+	inputLayout.Create(*this);
+	inputLayout.Bind(*this);
+
+	// Draw
+	DXASSERT(myContext->DrawIndexed((UINT)gremlin.myIndices.size(), 0u, 0u));
 }
 
 ComPtr<ID3D11Device> DX11::GetDevice() const

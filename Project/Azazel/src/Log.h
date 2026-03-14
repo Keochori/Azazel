@@ -43,4 +43,4 @@ namespace LOG
 #define LOG_SUCCESS(string) LOG::Print(string, __FILE__, __LINE__, LogType::eSuccess)
 #define LOG_WARNING(string) LOG::Print(string, __FILE__, __LINE__, LogType::eWarning)
 #define LOG_ERROR(string) LOG::Print(string, __FILE__, __LINE__, LogType::eError)
-#define Assert(bool) assert(bool)
+#define ASSERT(bool) assert(bool)

@@ -17,4 +17,4 @@
 - Quaternions
 
 // Other
-- How do matrices work?
+- Add debug text like framerate and stuff
