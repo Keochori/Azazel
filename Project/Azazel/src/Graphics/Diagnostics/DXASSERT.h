@@ -1,6 +1,6 @@
 #pragma once
 #include "Graphics/Diagnostics/DXGIInfoManager.h"
-#include "LOG.h"
+#include "Core/LOG.h"
 #include <windows.h>
 #include <assert.h>
 #include <vector>
