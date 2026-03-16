@@ -4,12 +4,12 @@
 
 struct alignas(16) TransformBuffer
 {
-	TransformBuffer(const DirectX::XMMATRIX& aMatrix) : transform(aMatrix) {}
-	DirectX::XMMATRIX transform;
+	TransformBuffer(const DirectX::XMMATRIX& aMatrix) : myTransform(aMatrix) {}
+	DirectX::XMMATRIX myTransform;
 };
 
 struct alignas(16) ColorBuffer
 {
-	ColorBuffer(const std::array<DirectX::XMVECTOR, 6>& aArray) : faceColors(aArray) {}
-	std::array<DirectX::XMVECTOR, 6> faceColors;
+	ColorBuffer(const std::array<DirectX::XMVECTOR, 6>& aArray) : myFaceColors(aArray) {}
+	std::array<DirectX::XMVECTOR, 6> myFaceColors;
 };
