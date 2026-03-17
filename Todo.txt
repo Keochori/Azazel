@@ -4,6 +4,7 @@
 - Textures
 - Animations
 - Transparency
+- instance rendering (if they have same mesh)
 
 // Engine
 - Add Configurations

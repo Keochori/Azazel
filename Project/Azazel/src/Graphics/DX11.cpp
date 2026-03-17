@@ -241,7 +241,7 @@ void DX11::DrawCube(float angle, float x, float y, float z)
 	DXASSERT(myContext->DrawIndexed((UINT)indices.size(), 0u, 0u));
 }
 
-void DX11::DrawGremlin(float angle, float x, float y, float z)
+void DX11::DrawGremlin(float angle, float x, float y, float z, const Camera* const aCamera)
 {
 	Mesh gremlin = myAssetHandler.GetMesh("gremlin.fbx");
 
@@ -256,16 +256,22 @@ void DX11::DrawGremlin(float angle, float x, float y, float z)
 	indexBuffer.Bind(*this);
 
 	// Create and Bind Transform Buffer
+	XMMATRIX transform = 
+		DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f) *
+		DirectX::XMMatrixRotationY(XMConvertToRadians(180)) *
+		DirectX::XMMatrixTranslation(x, y, z);
+	XMMATRIX view = aCamera->GetViewMatrix();
+	XMMATRIX perspective = DirectX::XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), GetScreenWidth() / GetScreenHeight(), 0.5f, 1000.f);
+
 	ConstantBuffer<TransformBuffer> transformBuffer(
 		eBindType::VS,
 		TransformBuffer({
-			DirectX::XMMatrixTranspose(
-				DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f) *
-				DirectX::XMMatrixRotationX(0.0f) *
-				DirectX::XMMatrixRotationY(angle) *
-				DirectX::XMMatrixTranslation(x, y, z) *
-				DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(), 0.5f, 10.f))
-			})
+			XMMatrixTranspose(
+				transform *
+				view *
+				perspective
+			)
+		})
 	);
 
 	transformBuffer.Create(*this);

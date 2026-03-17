@@ -5,6 +5,7 @@
 
 // Remove later
 #include "Assets/AssetHandler.h"
+#include "Camera.h"
 
 using namespace Microsoft::WRL;
 
@@ -22,7 +23,7 @@ public:
 	void EndFrame();
 
 	void DrawCube(float angle, float x, float y, float z);
-	void DrawGremlin(float angle, float x, float y, float z);
+	void DrawGremlin(float angle, float x, float y, float z, const Camera* const aCamera);
 
 	ComPtr<ID3D11Device> GetDevice() const;
 	ComPtr<ID3D11DeviceContext> GetContext() const;
