@@ -13,7 +13,7 @@ Engine::Engine(HWND& aHWND)
 
 	myMaxCameraSpeed = 10;
 	myMinCameraSpeed = 2;
-	myCameraRotationSpeed = 1;
+	myCameraRotationSpeed = 2;
 	myCurrentCameraSpeed = myMaxCameraSpeed * 0.5f;
 }
 
@@ -42,9 +42,9 @@ void Engine::UpdateCameraInput()
 	float movementSpeedDelta = myCurrentCameraSpeed * deltaTime;
 
 	// Change camera speed with mousewheel
-	short wheelData = INPUT.GetMouseWheelDelta();
-	if (wheelData != 0)
-		myCurrentCameraSpeed = std::clamp(myCurrentCameraSpeed + wheelData * deltaTime, myMinCameraSpeed, myMaxCameraSpeed);
+	short wheelDelta = INPUT.GetMouseWheelDelta();
+	if (wheelDelta != 0)
+		myCurrentCameraSpeed = std::clamp(myCurrentCameraSpeed + wheelDelta * 0.01f, myMinCameraSpeed, myMaxCameraSpeed);
 
 	// Holding right-click
 	if (INPUT.IsMouseButtonDown(eKeys::MOUSERBUTTON))
@@ -66,6 +66,6 @@ void Engine::UpdateCameraInput()
 		// Rotation
 		POINT mouseDelta = INPUT.GetMouseDelta();
 		if (mouseDelta.x != 0 || mouseDelta.y != 0)
-			myEditorCamera->Rotate(mouseDelta.y * myCameraRotationSpeed * deltaTime, mouseDelta.x * myCameraRotationSpeed * deltaTime);
+			myEditorCamera->Rotate(mouseDelta.y * myCameraRotationSpeed * 0.001f, mouseDelta.x * myCameraRotationSpeed * 0.001f);
 	}
 }
