@@ -260,8 +260,9 @@ public:
 	bool IsMouseButtonUp(eKeys aMouseButtonCode) const;
 	POINT GetMousePosition() const;
 	POINT GetMouseDelta() const;
+	short GetMouseWheelDelta() const;
 	void ResetMouseDelta();
-	bool GetMouseInsideWindow() const;
+	bool IsMouseInsideWindow() const;
 	void MouseInsideWindowUpdate(bool aState);
 	void UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM lParam);
 	void UpdateStates();
@@ -276,6 +277,8 @@ private:
 	POINT myTentativeMousePos;
 	POINT myCurrentMousePos;
 	POINT myPreviousMousePos;
+	short myCurrentMouseWheelDelta;
+	short myPreviousMouseWheelDelta;
 	bool myMouseInsideWindow = true;
 };
 

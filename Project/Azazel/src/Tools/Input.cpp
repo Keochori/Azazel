@@ -51,12 +51,17 @@ POINT Input::GetMouseDelta() const
 	return myDelta;
 }
 
+short Input::GetMouseWheelDelta() const
+{
+	return myCurrentMouseWheelDelta;
+}
+
 void Input::ResetMouseDelta()
 {
 	myCurrentMousePos = myTentativeMousePos;
 }
 
-bool Input::GetMouseInsideWindow() const
+bool Input::IsMouseInsideWindow() const
 {
 	return myMouseInsideWindow;
 }
@@ -101,6 +106,10 @@ void Input::UpdateEvents(const UINT message, const WPARAM wParam, const LPARAM l
 			myTentativeMousePos.x = LOWORD(lParam);
 			myTentativeMousePos.y = HIWORD(lParam);
 			break;
+		case WM_MOUSEWHEEL:
+			short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+			myPreviousMouseWheelDelta += delta;
+			break;
 	}
 }
 
@@ -110,4 +119,6 @@ void Input::UpdateStates()
 	myCurrentState = myTentativeState;
 	myPreviousMousePos = myCurrentMousePos;
 	myCurrentMousePos = myTentativeMousePos;
+	myCurrentMouseWheelDelta = myPreviousMouseWheelDelta;
+	myPreviousMouseWheelDelta = 0;
 }
