@@ -38,8 +38,7 @@ void Engine::Update()
 
 void Engine::UpdateCameraInput()
 {
-	float deltaTime = TIMER.GetDeltaTime();
-	float movementSpeedDelta = myCurrentCameraSpeed * deltaTime;
+	float movementSpeedDelta = myCurrentCameraSpeed * TIMER.GetDeltaTime();
 
 	// Change camera speed with mousewheel
 	short wheelDelta = INPUT.GetMouseWheelDelta();
