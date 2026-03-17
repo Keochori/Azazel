@@ -16,7 +16,8 @@ enum LogType
 
 namespace LOG
 {
-	static void Print(const std::string& aString, const char* aFile, int aLine, const LogType aLogType = LogType::eStandard)
+	template<typename T>
+	static void Print(const T& aValue, const char* aFile, int aLine, const LogType aLogType = LogType::eStandard)
 	{
 		constexpr WORD WHITE = 15;
 		constexpr WORD GREEN = 10;
@@ -34,13 +35,13 @@ namespace LOG
 			default: break;
 		}
 
-		std::cout << "[" << std::filesystem::path(aFile).filename().string() << ":" << aLine << "] " << aString << std::endl;
+		std::cout << "[" << std::filesystem::path(aFile).filename().string() << ":" << aLine << "] " << aValue << std::endl;
 		SetConsoleTextAttribute(hConsole, WHITE);
 	}
 }
 
-#define LOG(string) LOG::Print(string, __FILE__, __LINE__, LogType::eStandard)
-#define LOG_SUCCESS(string) LOG::Print(string, __FILE__, __LINE__, LogType::eSuccess)
-#define LOG_WARNING(string) LOG::Print(string, __FILE__, __LINE__, LogType::eWarning)
-#define LOG_ERROR(string) LOG::Print(string, __FILE__, __LINE__, LogType::eError)
+#define LOG(value) LOG::Print(value, __FILE__, __LINE__, LogType::eStandard)
+#define LOG_SUCCESS(value) LOG::Print(value, __FILE__, __LINE__, LogType::eSuccess)
+#define LOG_WARNING(value) LOG::Print(value, __FILE__, __LINE__, LogType::eWarning)
+#define LOG_ERROR(value) LOG::Print(value, __FILE__, __LINE__, LogType::eError)
 #define ASSERT(bool) assert(bool)
