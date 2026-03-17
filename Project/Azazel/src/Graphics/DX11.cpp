@@ -14,7 +14,9 @@
 DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 {
 	// Initialize DXGIInfoManager
+#ifdef _DEBUG
 	DXGIInfoManager::GetInstance().Init();
+#endif
 
 	CreateDeviceAndSwapChainAndContext();
 	CreateRTV();
@@ -53,11 +55,15 @@ void DX11::CreateDeviceAndSwapChainAndContext()
 	swapChainDesc.Flags = 0;
 
 	// Create Device, Swapchain and Context
+	UINT createDeviceFlags = 0;
+#ifdef _DEBUG
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 	HRASSERT(D3D11CreateDeviceAndSwapChain(
 		nullptr,
 		D3D_DRIVER_TYPE_HARDWARE,
 		nullptr,
-		D3D11_CREATE_DEVICE_DEBUG,
+		createDeviceFlags,
 		nullptr,
 		0,
 		D3D11_SDK_VERSION,

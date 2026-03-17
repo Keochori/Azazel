@@ -1,10 +1,11 @@
 #pragma once
-#include "Graphics/Diagnostics/DXGIInfoManager.h"
 #include "Core/LOG.h"
 #include <windows.h>
 #include <assert.h>
 #include <vector>
 
+#ifdef _DEBUG
+#include "Graphics/Diagnostics/DXGIInfoManager.h"
 static void DXAssertMessages(const char* aFile, int aLine)
 {
 	bool error = false;
@@ -39,5 +40,12 @@ static void HRESULTCheck(HRESULT aHr, const char* aFile, int aLine)
 
 #define HRASSERT(hr) HRESULTCheck(hr, __FILE__, __LINE__)
 #define DXASSERT(func) (func); DXAssertMessages(__FILE__, __LINE__)
+
+#else
+
+#define HRASSERT(hr) (hr)
+#define DXASSERT(func) (func)
+
+#endif
 
 

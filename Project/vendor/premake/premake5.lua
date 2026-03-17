@@ -2,7 +2,8 @@ workspace "Azazel"
     architecture "x64"
 
     configurations {
-        "Debug"
+        "Debug",
+        "Release"
     }
 
     TargetDir = "bin/%{cfg.buildcfg}"
@@ -50,10 +51,18 @@ project "Azazel"
         "Azazel/vendor"
         }
 
-    filter "configurations:Debug"
-    defines "DEBUG"
-    runtime "Debug"
-    symbols "on"
+-- Configurations
+    filter("configurations:Debug")
+        runtime "Debug"
+        symbols "on"
+    filter {}
+    
+    filter("configurations:Release")
+        runtime "Release"
+        optimize "on"
+    filter {}
+-----------------
+    
 
 -- Shaders
     shaderobjectfileoutput("%{cfg.targetdir}/resources/shaders/%%(Filename).cso")
@@ -67,3 +76,4 @@ project "Azazel"
     shadertype("Pixel")
     shadermodel "5.0"
     filter {}
+----------
