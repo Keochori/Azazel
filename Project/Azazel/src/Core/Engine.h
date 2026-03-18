@@ -14,7 +14,7 @@ public:
 	void UpdateCameraInput();
 
 private:
-	std::unique_ptr<DX11> myDX11Framework;
+	std::unique_ptr<DX11> myDX11;
 
 	// Camera
 	std::unique_ptr<Camera> myEditorCamera;

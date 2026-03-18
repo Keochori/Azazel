@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "Engine.h"
 #include "Graphics/DX11.h"
-#include "Graphics/Camera.h"
+#include "Scene/Camera/Camera.h"
 #include "Tools/Input.h"
 #include "Tools/Timer.h"
 
 
 Engine::Engine(HWND& aHWND)
 {
-	myDX11Framework = std::make_unique<DX11>(aHWND);
+	myDX11 = std::make_unique<DX11>(aHWND);
 	myEditorCamera = std::make_unique<Camera>();
 
 	myMaxCameraSpeed = 10;
@@ -26,13 +26,13 @@ void Engine::Update()
 	UpdateCameraInput();
 
 	// DX --------------------------
-	myDX11Framework->BeginFrame();
+	myDX11->BeginFrame();
 
 	const float color[] = { 0.2f,0.2f,0.2f,1.0f };
-	myDX11Framework->ClearBuffer(color);
-	myDX11Framework->DrawGremlin(TIMER.GetTotalTime() - 5.0f, 0.0f, -1.5f, 4.0f, myEditorCamera.get());
+	myDX11->ClearBuffer(color);
+	myDX11->DrawGremlin(TIMER.GetTotalTime() - 5.0f, 0.0f, -1.5f, 4.0f, myEditorCamera.get());
 
-	myDX11Framework->EndFrame();
+	myDX11->EndFrame();
 	// -----------------------------
 }
 

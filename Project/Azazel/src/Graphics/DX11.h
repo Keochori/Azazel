@@ -5,7 +5,7 @@
 
 // Remove later
 #include "Assets/AssetHandler.h"
-#include "Camera.h"
+#include "Scene/Camera/Camera.h"
 
 using namespace Microsoft::WRL;
 
