@@ -2,7 +2,7 @@
 #include <memory>
 
 class DX11;
-class Camera;
+class Scene;
 
 class Engine
 {
@@ -11,16 +11,10 @@ public:
 	~Engine();
 
 	void Update();
-	void UpdateCameraInput();
 
 private:
+	void UpdateFrame();
 	std::unique_ptr<DX11> myDX11;
-
-	// Camera
-	std::unique_ptr<Camera> myEditorCamera;
-	float myCurrentCameraSpeed;
-	float myMaxCameraSpeed;
-	float myMinCameraSpeed;
-	float myCameraRotationSpeed;
+	std::shared_ptr<Scene> myScene;
 };
 

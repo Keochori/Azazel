@@ -5,8 +5,9 @@
 
 // Remove later
 #include "Assets/AssetHandler.h"
-#include "Scene/Camera/Camera.h"
+#include "DirectXMath.h"
 
+using namespace DirectX;
 using namespace Microsoft::WRL;
 
 class DX11
@@ -17,13 +18,11 @@ public:
 	DX11& operator=(const DX11&) = delete;
 	~DX11();
 
-
 	void BeginFrame();
 	void ClearBuffer(const float color[]);
 	void EndFrame();
 
-	void DrawCube(float angle, float x, float y, float z);
-	void DrawGremlin(float angle, float x, float y, float z, const Camera* const aCamera);
+	void DrawGremlin(float angle, float x, float y, float z, const XMMATRIX aViewMatrix);
 
 	ComPtr<ID3D11Device> GetDevice() const;
 	ComPtr<ID3D11DeviceContext> GetContext() const;

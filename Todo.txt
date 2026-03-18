@@ -2,12 +2,12 @@
 - 3D Models
 - Normal Maps
 - Textures
+- PBR materials
 - Animations
 - Transparency
 - instance rendering (if they have same mesh)
 
 // Engine
-- Add Configurations
 - PhysX
 - Deferred Rendering 
 - Entity Component System
@@ -15,7 +15,10 @@
 - Skybox
 - Gizmo
 - Render States
-- Quaternions
+- Investigate optimizing binding vertex buffers (skip if models share same vertices/model)
 
 // Other
 - Add debug text like framerate and stuff
+- How does binding multiple buffers work? (inputassembler with VertexBuffers)
+- Give bindables only access to either device or context, not entire DX11
+- Try changing unused destructors and constructors to = default in project

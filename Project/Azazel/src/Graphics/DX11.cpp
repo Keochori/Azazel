@@ -175,79 +175,7 @@ void DX11::EndFrame()
 	DXASSERT(mySwapChain->Present(1, 0));
 }
 
-void DX11::DrawCube(float angle, float x, float y, float z)
-{
-	// Create and Bind Vertex Buffer
-	VertexBuffer vertexBuffer({
-		{-1.0f, -1.0f, -1.0f },
-		{1.0f, -1.0f, -1.0f  },
-		{-1.0f, 1.0f, -1.0f  },
-		{1.0f, 1.0f, -1.0f   },
-		{-1.0f, -1.0f, 1.0f  },
-		{1.0f, -1.0f, 1.0f   },
-		{-1.0f, 1.0f, 1.0f   },
-		{1.0f, 1.0f, 1.0f	 },
-		});
-	vertexBuffer.Create(*this);
-	vertexBuffer.Bind(*this);
-
-	// Create and Bind Index Buffer
-	std::vector<unsigned short> indices = {
-		0,3,1, 0,2,3, //back
-		4,2,0, 4,6,2, //l-side
-		5,1,3, 5,3,7, //r-side
-		6,3,2, 6,7,3, //up
-		4,1,5, 4,0,1, //down
-		4,7,6, 4,5,7, //front
-	};
-	IndexBuffer indexBuffer(indices);
-	indexBuffer.Create(*this);
-	indexBuffer.Bind(*this);
-
-	// Create and Bind Transform Buffer
-	ConstantBuffer<TransformBuffer> transformBuffer(
-		eBindType::VS, 
-		TransformBuffer({
-			DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixRotationX(angle) *
-			DirectX::XMMatrixRotationY(angle * 0.1f) *
-			DirectX::XMMatrixTranslation(x, y, z) *
-			DirectX::XMMatrixPerspectiveLH(1.0f, GetScreenHeight() / GetScreenWidth(), 0.5f, 10.f))
-		})
-	);
-
-	transformBuffer.Create(*this);
-	transformBuffer.Bind(*this);
-
-	// Create and Bind Color Buffer
-	ConstantBuffer<ColorBuffer> colorBuffer(
-		eBindType::PS, 
-		ColorBuffer({
-			DirectX::XMVectorSet(1.0f,0.0f,1.0f,0.0f),
-			DirectX::XMVectorSet(1.0f,0.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,0.0f,1.0f,0.0f),
-			DirectX::XMVectorSet(1.0f,1.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,1.0f,1.0f,0.0f)
-		})
-	);
-	colorBuffer.Create(*this);
-	colorBuffer.Bind(*this);
-
-	// Create Input Layout
-	InputLayout inputLayout(
-		{
-			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		});
-
-	inputLayout.Create(*this);
-	inputLayout.Bind(*this);
-
-	// Draw
-	DXASSERT(myContext->DrawIndexed((UINT)indices.size(), 0u, 0u));
-}
-
-void DX11::DrawGremlin(float angle, float x, float y, float z, const Camera* const aCamera)
+void DX11::DrawGremlin(float angle, float x, float y, float z, const XMMATRIX aViewMatrix)
 {
 	Mesh gremlin = myAssetHandler.GetMesh("gremlin.fbx");
 
@@ -263,11 +191,11 @@ void DX11::DrawGremlin(float angle, float x, float y, float z, const Camera* con
 
 	// Create and Bind Transform Buffer
 	XMMATRIX transform = 
-		DirectX::XMMatrixScaling(0.05f, 0.05f, 0.05f) *
-		DirectX::XMMatrixRotationY(XMConvertToRadians(180)) *
-		DirectX::XMMatrixTranslation(x, y, z);
-	XMMATRIX view = aCamera->GetViewMatrix();
-	XMMATRIX perspective = DirectX::XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), GetScreenWidth() / GetScreenHeight(), 0.5f, 1000.f);
+		XMMatrixScaling(0.05f, 0.05f, 0.05f) *
+		XMMatrixRotationY(XMConvertToRadians(180)) *
+		XMMatrixTranslation(x, y, z);
+	XMMATRIX view = aViewMatrix;
+	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), GetScreenWidth() / GetScreenHeight(), 0.5f, 1000.f);
 
 	ConstantBuffer<TransformBuffer> transformBuffer(
 		eBindType::VS,
