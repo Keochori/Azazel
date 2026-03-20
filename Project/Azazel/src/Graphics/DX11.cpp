@@ -1,15 +1,8 @@
 #include "pch.h"
 #include "DX11.h"
-#include "DirectXMath.h"
 #include "Diagnostics/DXASSERT.h"
 #include "Bindables/VertexShader.h"
 #include "Bindables/PixelShader.h"
-
-// Remove later
-#include "Bindables/InputLayout.h"
-#include "Bindables/VertexBuffer.h"
-#include "Bindables/IndexBuffer.h"
-#include "Bindables/ConstantBuffer.hpp"
 
 DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 {
@@ -26,8 +19,6 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 	SetViewPort();
 	SetDefaultVS();
 	SetDefaultPS();
-
-	myAssetHandler.LoadMesh("gremlin.fbx");
 }
 
 DX11::~DX11()
@@ -128,15 +119,15 @@ void DX11::CreateDSV()
 void DX11::SetDefaultVS()
 {
 	VertexShader vertexShader;
-	vertexShader.Create(*this);
-	vertexShader.Bind(*this);
+	vertexShader.Create(myDevice);
+	vertexShader.Bind(myContext);
 }
 
 void DX11::SetDefaultPS()
 {
 	PixelShader pixelShader;
-	pixelShader.Create(*this);
-	pixelShader.Bind(*this);
+	pixelShader.Create(myDevice);
+	pixelShader.Bind(myContext);
 }
 
 void DX11::SetPrimitiveTopology()
@@ -175,76 +166,12 @@ void DX11::EndFrame()
 	DXASSERT(mySwapChain->Present(1, 0));
 }
 
-void DX11::DrawGremlin(float angle, float x, float y, float z, const XMMATRIX aViewMatrix)
-{
-	Mesh gremlin = myAssetHandler.GetMesh("gremlin.fbx");
-
-	// Create and Bind Vertex Buffer
-	VertexBuffer vertexBuffer(gremlin.myVertices);
-	vertexBuffer.Create(*this);
-	vertexBuffer.Bind(*this);
-
-	// Create and Bind Index Buffer
-	IndexBuffer indexBuffer(gremlin.myIndices);
-	indexBuffer.Create(*this);
-	indexBuffer.Bind(*this);
-
-	// Create and Bind Transform Buffer
-	XMMATRIX transform = 
-		XMMatrixScaling(0.05f, 0.05f, 0.05f) *
-		XMMatrixRotationY(XMConvertToRadians(180)) *
-		XMMatrixTranslation(x, y, z);
-	XMMATRIX view = aViewMatrix;
-	XMMATRIX perspective = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), GetScreenWidth() / GetScreenHeight(), 0.5f, 1000.f);
-
-	ConstantBuffer<TransformBuffer> transformBuffer(
-		eBindType::VS,
-		TransformBuffer({
-			XMMatrixTranspose(
-				transform *
-				view *
-				perspective
-			)
-		})
-	);
-
-	transformBuffer.Create(*this);
-	transformBuffer.Bind(*this);
-
-	// Create and Bind Color Buffer
-	ConstantBuffer<ColorBuffer> colorBuffer(
-		eBindType::PS,
-		ColorBuffer({
-			DirectX::XMVectorSet(1.0f,0.0f,1.0f,0.0f),
-			DirectX::XMVectorSet(1.0f,0.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,1.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,0.0f,1.0f,0.0f),
-			DirectX::XMVectorSet(1.0f,1.0f,0.0f,0.0f),
-			DirectX::XMVectorSet(0.0f,1.0f,1.0f,0.0f)
-			})
-	);
-	colorBuffer.Create(*this);
-	colorBuffer.Bind(*this);
-
-	// Create Input Layout
-	InputLayout inputLayout(
-		{
-			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		});
-
-	inputLayout.Create(*this);
-	inputLayout.Bind(*this);
-
-	// Draw
-	DXASSERT(myContext->DrawIndexed((UINT)gremlin.myIndices.size(), 0u, 0u));
-}
-
-ComPtr<ID3D11Device> DX11::GetDevice() const
+ComPtr<ID3D11Device>& DX11::GetDevice()
 {
 	return myDevice;
 }
 
-ComPtr<ID3D11DeviceContext> DX11::GetContext() const
+ComPtr<ID3D11DeviceContext>& DX11::GetContext()
 {
 	return myContext;
 }

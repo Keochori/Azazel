@@ -3,11 +3,6 @@
 #include <d3d11.h>
 #include <wrl.h>
 
-// Remove later
-#include "Assets/AssetHandler.h"
-#include "DirectXMath.h"
-
-using namespace DirectX;
 using namespace Microsoft::WRL;
 
 class DX11
@@ -22,10 +17,8 @@ public:
 	void ClearBuffer(const float color[]);
 	void EndFrame();
 
-	void DrawGremlin(float angle, float x, float y, float z, const XMMATRIX aViewMatrix);
-
-	ComPtr<ID3D11Device> GetDevice() const;
-	ComPtr<ID3D11DeviceContext> GetContext() const;
+	ComPtr<ID3D11Device>& GetDevice();
+	ComPtr<ID3D11DeviceContext>& GetContext();
 
 private:
 	void CreateDeviceAndSwapChainAndContext();
@@ -45,9 +38,6 @@ private:
 	ComPtr<IDXGISwapChain> mySwapChain = nullptr;
 	ComPtr<ID3D11RenderTargetView> myRTV = nullptr;
 	ComPtr<ID3D11DepthStencilView> myDSV = nullptr;
-
-	// Remove later
-	AssetHandler myAssetHandler;
 
 	HWND myHWND;
 };

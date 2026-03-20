@@ -1,9 +1,9 @@
 cbuffer CBuf
 {
-    matrix transform;
+    matrix wvpMatrix;
 };
 
 float4 main(float3 pos : POSITION) : SV_Position
 {
-    return mul(float4(pos, 1.0f), transform);
+    return mul(float4(pos, 1.0f), wvpMatrix);
 }

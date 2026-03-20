@@ -7,16 +7,16 @@ InputLayout::InputLayout(const std::vector<D3D11_INPUT_ELEMENT_DESC>& aInputElem
 {
 }
 
-void InputLayout::Create(DX11& aDX11)
+void InputLayout::Create(ComPtr<ID3D11Device>& aDevice)
 {
 	ComPtr<ID3DBlob> blob;
 	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_vs.cso", &blob));
-	HRASSERT(aDX11.GetDevice()->CreateInputLayout(myInputElementDesc.data(), (UINT)myInputElementDesc.size(), blob->GetBufferPointer(), blob->GetBufferSize(), &myInputLayout));
+	HRASSERT(aDevice->CreateInputLayout(myInputElementDesc.data(), (UINT)myInputElementDesc.size(), blob->GetBufferPointer(), blob->GetBufferSize(), &myInputLayout));
 }
 
-void InputLayout::Bind(DX11& aDX11)
+void InputLayout::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 {
-	DXASSERT(aDX11.GetContext()->IASetInputLayout(myInputLayout.Get()));
+	DXASSERT(aContext->IASetInputLayout(myInputLayout.Get()));
 }
 
 ID3D11InputLayout* InputLayout::Get() const

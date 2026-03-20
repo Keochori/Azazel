@@ -2,10 +2,10 @@
 #include <DirectXMath.h>
 #include <array>
 
-struct alignas(16) TransformBuffer
+struct alignas(16) WVPBuffer
 {
-	TransformBuffer(const DirectX::XMMATRIX& aMatrix) : myTransform(aMatrix) {}
-	DirectX::XMMATRIX myTransform;
+	WVPBuffer(const DirectX::XMMATRIX& aMatrix) : myWVP(aMatrix) {}
+	DirectX::XMMATRIX myWVP;
 };
 
 struct alignas(16) ColorBuffer

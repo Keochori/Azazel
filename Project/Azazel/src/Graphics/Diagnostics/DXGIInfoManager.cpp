@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "DXGIInfoManager.h"
-#include <memory>
 #include "dxgidebug.h"
+#include <memory>
 
 DXGIInfoManager& DXGIInfoManager::GetInstance()
 {

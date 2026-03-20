@@ -1,11 +1,11 @@
 // Models
-- 3D Models
 - Normal Maps
 - Textures
 - PBR materials
 - Animations
 - Transparency
 - instance rendering (if they have same mesh)
+- Quaternion rotation (Done for camera)
 
 // Engine
 - PhysX
@@ -19,6 +19,7 @@
 
 // Other
 - Add debug text like framerate and stuff
+- Add names to Objects (maybe add Scene->GetObject(std::string aName))
+
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
-- Give bindables only access to either device or context, not entire DX11
-- Try changing unused destructors and constructors to = default in project
+- Check if its worth separating World View Projection into multiple buffers

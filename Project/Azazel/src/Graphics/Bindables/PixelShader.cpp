@@ -7,16 +7,16 @@ PixelShader::PixelShader()
 {
 }
 
-void PixelShader::Create(DX11& aDX11)
+void PixelShader::Create(ComPtr<ID3D11Device>& aDevice)
 {
 	ComPtr<ID3DBlob> blob;
 	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_ps.cso", &blob));
-	HRASSERT(aDX11.GetDevice()->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &myShader));
+	HRASSERT(aDevice->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &myShader));
 }
 
-void PixelShader::Bind(DX11& aDX11)
+void PixelShader::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 {
-	DXASSERT(aDX11.GetContext()->PSSetShader(myShader.Get(), nullptr, 0u));
+	DXASSERT(aContext->PSSetShader(myShader.Get(), nullptr, 0u));
 }
 
 ID3D11PixelShader* PixelShader::Get() const

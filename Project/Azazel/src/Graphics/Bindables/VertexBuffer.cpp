@@ -6,7 +6,7 @@ VertexBuffer::VertexBuffer(const std::vector<Vertex>& aVertices) : myVertices(aV
 {
 }
 
-void VertexBuffer::Create(DX11& aDX11)
+void VertexBuffer::Create(ComPtr<ID3D11Device>& aDevice)
 {
 	D3D11_BUFFER_DESC bufferDesc = {};
 	bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -19,14 +19,14 @@ void VertexBuffer::Create(DX11& aDX11)
 	D3D11_SUBRESOURCE_DATA subResData = {};
 	subResData.pSysMem = myVertices.data();
 
-	HRASSERT(aDX11.GetDevice()->CreateBuffer(&bufferDesc, &subResData, &myBuffer));
+	HRASSERT(aDevice->CreateBuffer(&bufferDesc, &subResData, &myBuffer));
 }
 
-void VertexBuffer::Bind(DX11& aDX11)
+void VertexBuffer::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 {
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
-	DXASSERT(aDX11.GetContext()->IASetVertexBuffers(0u, 1u, myBuffer.GetAddressOf(), &stride, &offset));
+	DXASSERT(aContext->IASetVertexBuffers(0u, 1u, myBuffer.GetAddressOf(), &stride, &offset));
 }
 
 ID3D11Buffer* VertexBuffer::Get() const

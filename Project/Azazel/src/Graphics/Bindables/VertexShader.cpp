@@ -7,16 +7,16 @@ VertexShader::VertexShader()
 {
 }
 
-void VertexShader::Create(DX11& aDX11)
+void VertexShader::Create(ComPtr<ID3D11Device>& aDevice)
 {
 	ComPtr<ID3DBlob> blob;
 	HRASSERT(D3DReadFileToBlob(L"resources/shaders/Default_vs.cso", &blob));
-	HRASSERT(aDX11.GetDevice()->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &myShader));
+	HRASSERT(aDevice->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &myShader));
 }
 
-void VertexShader::Bind(DX11& aDX11)
+void VertexShader::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 {
-    DXASSERT(aDX11.GetContext()->VSSetShader(myShader.Get(), nullptr, 0u));
+    DXASSERT(aContext->VSSetShader(myShader.Get(), nullptr, 0u));
 }
 
 ID3D11VertexShader* VertexShader::Get() const

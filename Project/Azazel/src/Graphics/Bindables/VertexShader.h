@@ -1,15 +1,12 @@
 #pragma once
 #include "Graphics/Bindables/IBindable.h"
-#include <wrl.h>
-
-using namespace Microsoft::WRL;
 
 class VertexShader : public IBindable<ID3D11VertexShader>
 {
 public:
 	VertexShader();
-	void Create(DX11& aDX11) override;
-	void Bind(DX11& aDX11) override;
+	void Create(ComPtr<ID3D11Device>& aDevice) override;
+	void Bind(ComPtr<ID3D11DeviceContext>& aContext) override;
 	ID3D11VertexShader* Get() const override;
 	ID3D11VertexShader* const* GetAddressOf() const override;
 

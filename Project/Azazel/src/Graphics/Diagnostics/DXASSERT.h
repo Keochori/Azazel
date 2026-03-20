@@ -1,10 +1,10 @@
 #pragma once
-#include "Core/LOG.h"
-#include <windows.h>
-#include <assert.h>
-#include <vector>
 
 #ifdef _DEBUG
+#include "Core/LOG.h"
+#include <vector>
+#include <windows.h>
+#include <assert.h>
 #include "Graphics/Diagnostics/DXGIInfoManager.h"
 static void DXAssertMessages(const char* aFile, int aLine)
 {
