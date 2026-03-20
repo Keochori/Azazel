@@ -17,6 +17,7 @@ Engine::Engine(HWND& aHWND)
 
 	myScene->AddObject(CreateObject("gremlin.fbx"));
 	myScene->AddObject(CreateObject("chest.fbx"));
+	myScene->AddObject(CreateObject("cube.fbx"));
 
 	Transform& gremlinTransform = myScene->GetObjects()[0]->GetTransform();
 	gremlinTransform.SetPosition(gremlinTransform.myPosition.x, -1.5f, 4.0f);
@@ -24,9 +25,12 @@ Engine::Engine(HWND& aHWND)
 	gremlinTransform.SetScale(0.05f, 0.05f, 0.05f);
 
 	Transform& chestTransform = myScene->GetObjects()[1]->GetTransform();
-	chestTransform.SetPosition(-2.0f, -1.5f, 4.0f);
+	chestTransform.SetPosition(-2.5f, -1.5f, 4.0f);
 	chestTransform.SetRotation(chestTransform.myRotation.x, 180.0f, chestTransform.myRotation.z);
 	chestTransform.SetScale(0.01f, 0.01f, 0.01f);
+
+	Transform& cubeTransform = myScene->GetObjects()[2]->GetTransform();
+	cubeTransform.SetPosition(3.0f, -0.5f, 4.0f);
 }
 
 Engine::~Engine()

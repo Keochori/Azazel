@@ -7,7 +7,7 @@ struct Transform
 {
 	XMFLOAT3 myPosition = XMFLOAT3(0, 0, 0);
 	XMFLOAT3 myRotation = XMFLOAT3(0, 0, 0);
-	XMFLOAT3 myScale = XMFLOAT3(0, 0, 0);
+	XMFLOAT3 myScale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 
 	void SetPosition(float aX, float aY, float aZ)
 	{
