@@ -27,7 +27,7 @@ void ImGuiManager::NewFrame()
 
 void ImGuiManager::Update()
 {
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	myFrameCounter++;
 	if (myFrameCounter > 30)
 	{
