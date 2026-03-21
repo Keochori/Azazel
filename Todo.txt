@@ -20,6 +20,7 @@
 // Other
 - Add debug text like framerate and stuff
 - Add names to Objects (maybe add Scene->GetObject(std::string aName))
+- Disable engine inputs when ImGui is taking inputs
 
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
 - Check if its worth separating World View Projection into multiple buffers

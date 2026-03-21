@@ -42,14 +42,19 @@ project "Azazel"
         "Azazel/src/**.hpp",
         "Azazel/src/**.h",
         "Azazel/src/**.hlsl",
-        "Azazel/vendor/assimp/**"
+        "Azazel/vendor/assimp/**",
+        "Azazel/vendor/imgui/**"
         }
 
     includedirs {
         "Azazel/resources",
         "Azazel/src",
         "Azazel/vendor"
-        }
+    }
+    
+    defines {
+        "IMGUI_DEFINE_MATH_OPERATORS"
+    }
 
 -- Configurations
     filter("configurations:Debug")

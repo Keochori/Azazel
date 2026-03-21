@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "Tools/Input.h"
 #include "Icon/resource.h"
+#include "imgui/imgui.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -106,6 +107,11 @@ HWND& Window::GetHWND()
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	// ImGui
+	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+		return true;
+
 	INPUT.UpdateEvents(uMsg, wParam, lParam);
 
 	switch (uMsg)

@@ -7,11 +7,13 @@
 #include "Scene/Scene.h"
 #include "Tools/Input.h"
 #include "Tools/Timer.h"
+#include "ImGui/ImGuiManager.h"
 
 Engine::Engine(HWND& aHWND)
 {
 	myDX11 = std::make_unique<DX11>(aHWND);
 	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext());
+	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext());
 	myAssetManager = std::make_unique<AssetManager>();
 	myScene = std::make_shared<Scene>();
 
@@ -44,8 +46,10 @@ std::shared_ptr<Object> Engine::CreateObject(std::string aMeshName)
 
 void Engine::Update()
 {
+	myImGuiManager->NewFrame();
 	myDX11->BeginFrame();
 	UpdateFrame();
+	myImGuiManager->Render();
 	myDX11->EndFrame();
 }
 

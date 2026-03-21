@@ -3,6 +3,7 @@
 #include "Tools/Input.h"
 #include "Tools/Timer.h"
 #include "Core/Engine.h"
+#include "ImGui/imguiIncludes.h"
 
 int main()
 {
@@ -18,6 +19,11 @@ int main()
 	{
 		if (!window.ProcessMessages())
 		{
+			// ImGui shutdown
+			ImGui_ImplDX11_Shutdown();
+			ImGui_ImplWin32_Shutdown();
+			ImGui::DestroyContext();
+
 			running = false;
 			break;
 		}
