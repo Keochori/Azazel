@@ -27,12 +27,15 @@ void ImGuiManager::NewFrame()
 
 void ImGuiManager::Update()
 {
-	//ImGui::ShowDemoWindow();
+	ImGui::ShowDemoWindow();
 	myFrameCounter++;
 	if (myFrameCounter > 30)
 	{
 		myFrameCounter = 0;
-		myCurrentFPS = (int)(1.0f / TIMER.GetDeltaTime());
+		float fps = 1.0f / TIMER.GetDeltaTime();
+
+		float alpha = 0.25f; // lower = smoother
+		myCurrentFPS = myCurrentFPS * (1.0f - alpha) + fps * alpha;
 	}
 	ImGui::Text("FPS: %i", myCurrentFPS);
 }
