@@ -11,7 +11,10 @@ public:
 	~ImGuiManager() = default;
 
 	void NewFrame();
+	void Update();
 	void Render();
 private:
+	int myFrameCounter = 0;
+	int myCurrentFPS = 0;
 };
 

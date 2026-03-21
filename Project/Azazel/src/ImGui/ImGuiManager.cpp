@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ImGuiManager.h"
 #include "ImGui/imguiIncludes.h"
+#include "Tools/Timer.h"
 
 ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext)
 {
@@ -22,7 +23,18 @@ void ImGuiManager::NewFrame()
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	ImGui::ShowDemoWindow();
+}
+
+void ImGuiManager::Update()
+{
+	//ImGui::ShowDemoWindow();
+	myFrameCounter++;
+	if (myFrameCounter > 30)
+	{
+		myFrameCounter = 0;
+		myCurrentFPS = (int)(1.0f / TIMER.GetDeltaTime());
+	}
+	ImGui::Text("FPS: %i", myCurrentFPS);
 }
 
 void ImGuiManager::Render()

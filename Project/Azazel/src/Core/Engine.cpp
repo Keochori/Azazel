@@ -47,6 +47,7 @@ std::shared_ptr<Object> Engine::CreateObject(std::string aMeshName)
 void Engine::Update()
 {
 	myImGuiManager->NewFrame();
+	myImGuiManager->Update();
 	myDX11->BeginFrame();
 	UpdateFrame();
 	myImGuiManager->Render();
