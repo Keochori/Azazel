@@ -23,12 +23,10 @@ Engine::Engine(HWND& aHWND)
 
 	Transform& gremlinTransform = myScene->GetObjects()[0]->GetTransform();
 	gremlinTransform.SetPosition(gremlinTransform.myPosition.x, -1.5f, 4.0f);
-	gremlinTransform.SetRotation(gremlinTransform.myRotation.x, 180.0f, gremlinTransform.myRotation.z);
 	gremlinTransform.SetScale(0.05f, 0.05f, 0.05f);
 
 	Transform& chestTransform = myScene->GetObjects()[1]->GetTransform();
 	chestTransform.SetPosition(-2.5f, -1.5f, 4.0f);
-	chestTransform.SetRotation(chestTransform.myRotation.x, 180.0f, chestTransform.myRotation.z);
 	chestTransform.SetScale(0.01f, 0.01f, 0.01f);
 
 	Transform& cubeTransform = myScene->GetObjects()[2]->GetTransform();

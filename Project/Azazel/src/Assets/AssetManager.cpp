@@ -34,7 +34,8 @@ std::shared_ptr<MeshData> AssetManager::LoadMeshData(std::string aMeshName)
         aiProcess_CalcTangentSpace |
         aiProcess_Triangulate |
         aiProcess_JoinIdenticalVertices |
-        aiProcess_SortByPType);
+        aiProcess_SortByPType|
+        aiProcess_ConvertToLeftHanded);
 
     if (nullptr == scene)
     {
