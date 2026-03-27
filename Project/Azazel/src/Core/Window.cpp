@@ -44,10 +44,6 @@ Window::Window() : myHInstance(GetModuleHandle(nullptr))
 	ShowWindow(hwnd, SW_SHOW);
 }
 
-Window::~Window()
-{
-}
-
 void Window::CreateAndRegisterWindowClass(HINSTANCE& aHInstance, LPCWSTR aClassName)
 {
 	LPCWSTR CLASS_NAME = aClassName;

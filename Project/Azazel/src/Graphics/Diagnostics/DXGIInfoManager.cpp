@@ -9,14 +9,6 @@ DXGIInfoManager& DXGIInfoManager::GetInstance()
 	return ourInstance;
 }
 
-DXGIInfoManager::DXGIInfoManager()
-{
-}
-
-DXGIInfoManager::~DXGIInfoManager()
-{
-}
-
 void DXGIInfoManager::Init()
 {
 	// Load the dll

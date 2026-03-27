@@ -14,7 +14,7 @@ template<typename T>
 class ConstantBuffer : public IBindable<ID3D11Buffer>
 {
 public:
-	ConstantBuffer(const eBindType aBindType, const T& aData);
+	ConstantBuffer(const eBindType& aBindType, const T& aData);
 	void Create(ComPtr<ID3D11Device>& aDevice) override;
 	void Bind(ComPtr<ID3D11DeviceContext>& aContext) override;
 	void UpdateData(ComPtr<ID3D11DeviceContext>& aContext, const T& aData);
@@ -22,13 +22,13 @@ public:
 	ID3D11Buffer* const* GetAddressOf() const override;
 
 private:
-	const T myData;
+	T myData;
 	const eBindType myBindType;
 	ComPtr<ID3D11Buffer> myBuffer;
 };
 
 template <typename T>
-inline ConstantBuffer<T>::ConstantBuffer(const eBindType aBindType, const T& aData) : myData(aData), myBindType(aBindType) {}
+inline ConstantBuffer<T>::ConstantBuffer(const eBindType& aBindType, const T& aData) : myData(aData), myBindType(aBindType) {}
 
 template <typename T>
 inline void ConstantBuffer<T>::Create(ComPtr<ID3D11Device>& aDevice)
@@ -71,6 +71,7 @@ inline void ConstantBuffer<T>::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 template <typename T>
 inline void ConstantBuffer<T>::UpdateData(ComPtr<ID3D11DeviceContext>& aContext, const T& aData)
 {
+	myData = aData;
 	D3D11_MAPPED_SUBRESOURCE mappedSubRes = {};
 
 	HRASSERT(aContext->Map(myBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubRes));

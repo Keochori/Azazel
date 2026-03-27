@@ -1,9 +1,25 @@
-cbuffer CBuf
+struct VS_INPUT
 {
-    matrix wvpMatrix;
+    float3 position : POSITION;
+    float2 albedoTexCoord : ALBEDOTEXCOORD;
 };
 
-float4 main(float3 pos : POSITION) : SV_Position
+struct VS_OUTPUT
 {
-    return mul(float4(pos, 1.0f), wvpMatrix);
+    float4 position : SV_Position;
+    float2 albedoTexCoord : ALBEDOTEXCOORD;
+};
+
+cbuffer WVPBuffer
+{
+    matrix WVPMatrix;
+};
+
+VS_OUTPUT main(VS_INPUT input)
+{
+    VS_OUTPUT output;
+    output.position = mul(float4(input.position, 1.0f), WVPMatrix);
+    output.albedoTexCoord = input.albedoTexCoord;
+    
+    return output;
 }

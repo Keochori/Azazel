@@ -13,11 +13,11 @@ public:
 	Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext);
 	~Renderer() = default;
 
-	void Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, std::vector<std::shared_ptr<Object>> aObjects);
+	void Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<std::shared_ptr<Object>>& aObjects);
 
 private:
 	ConstantBuffer<WVPBuffer> myWVPBuffer;
-	ConstantBuffer<ColorBuffer> myColorBuffer;
+	ConstantBuffer<MaterialBuffer> myMaterialBuffer;
 	InputLayout myInputLayout;
 };
 

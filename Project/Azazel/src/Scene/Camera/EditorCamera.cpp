@@ -12,10 +12,6 @@ EditorCamera::EditorCamera(float aStartingSpeed,  float aMinSpeed, float aMaxSpe
 	myZoomSpeed = aZoomSpeed;
 }
 
-EditorCamera::~EditorCamera()
-{
-}
-
 void EditorCamera::Rotate(float aPitch, float aYaw)
 {
 	myRotation.x += aPitch;

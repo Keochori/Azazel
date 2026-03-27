@@ -5,7 +5,6 @@ class EditorCamera : public Camera
 {
 public:
 	EditorCamera(float aStartingSpeed, float aMinSpeed, float aMaxSpeed, float aRotationSpeed, float aZoomSpeed);
-	~EditorCamera();
 
 	void Rotate(float aPitch, float aYaw) override;
 	void Update();

@@ -8,8 +8,12 @@ struct alignas(16) WVPBuffer
 	DirectX::XMMATRIX myWVP;
 };
 
-struct alignas(16) ColorBuffer
+struct alignas(16) MaterialBuffer
 {
-	ColorBuffer(const std::array<DirectX::XMVECTOR, 6>& aArray) : myFaceColors(aArray) {}
-	std::array<DirectX::XMVECTOR, 6> myFaceColors;
+	MaterialBuffer(int aHasMaterial, int aHasAlbedoTexture, const DirectX::XMFLOAT4& aAlbedoColor) :
+		myHasMaterial(aHasMaterial), aHasAlbedoTexture(aHasAlbedoTexture), myAlbedoColor(aAlbedoColor) {}
+	int myHasMaterial;
+	int aHasAlbedoTexture;
+	float padding[2];
+	DirectX::XMFLOAT4 myAlbedoColor;
 };

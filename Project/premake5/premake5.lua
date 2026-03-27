@@ -26,14 +26,20 @@ project "Azazel"
     postbuildcommands { 
         "{MKDIR} %{cfg.targetdir}/resources/meshes",
         "{COPYDIR} ../Assets/Meshes %{cfg.targetdir}/resources/meshes",
+        "{MKDIR} %{cfg.targetdir}/resources/textures",
+        "{COPYDIR} ../Assets/Textures %{cfg.targetdir}/resources/textures",
         "{COPYFILE} %[" .. AssimpDLL .. "] %{cfg.targetdir}",
+    }
+
+    libdirs {
+        "lib"
     }
 
     links {
         "d3d11.lib",
         "D3DCompiler.lib",
         "dxguid.lib",
-        "lib/assimp-vc143-mt.lib"
+        "assimp-vc143-mt.lib"
         }   
 
     files {
@@ -43,7 +49,8 @@ project "Azazel"
         "Azazel/src/**.h",
         "Azazel/src/**.hlsl",
         "Azazel/vendor/assimp/**",
-        "Azazel/vendor/imgui/**"
+        "Azazel/vendor/imgui/**",
+        "Azazel/vendor/directxtex/**"
         }
 
     includedirs {
@@ -60,11 +67,15 @@ project "Azazel"
     filter("configurations:Debug")
         runtime "Debug"
         symbols "on"
+        libdirs {"lib/Debug"}
+        links {"DirectXTex.lib"}
     filter {}
     
     filter("configurations:Release")
         runtime "Release"
         optimize "on"
+        libdirs {"lib/Release"}
+        links {"DirectXTex.lib"}
     filter {}
 -----------------
     

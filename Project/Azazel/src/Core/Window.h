@@ -5,7 +5,7 @@ class Window
 {
 public:
     Window();
-    ~Window();
+    ~Window() = default;
 
     bool ProcessMessages();
     HWND& GetHWND();

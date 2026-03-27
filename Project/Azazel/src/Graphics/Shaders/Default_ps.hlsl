@@ -1,9 +1,34 @@
-cbuffer CBuf
+sampler textureSampler;
+Texture2D albedoTexture;
+
+cbuffer MaterialBuffer
 {
-    float4 face_colors[6];
+    int hasMaterial;
+    int hasAlbedoTexture;
+    float4 albedoColor;
 };
 
-float4 main(uint tid : SV_PrimitiveID) : SV_TARGET
+struct PS_INPUT
 {
-    return face_colors[(tid % 6)];
+    float4 position : SV_Position;
+    float2 albedoTexCoord : ALBEDOTEXCOORD;
+};
+
+float4 main(PS_INPUT input) : SV_TARGET
+{
+    if (hasMaterial == 1)
+    {
+        if (hasAlbedoTexture == 1)
+        {
+            // Multiply albedoTexture by albedoColor
+            float4 albedo = albedoTexture.Sample(textureSampler, input.albedoTexCoord);
+            return albedo * albedoColor;
+        }
+        return albedoColor;
+    }
+    else
+    {
+        // Missing material
+        return float4(1.0, 0.0, 1.0, 1.0);        
+    }
 }

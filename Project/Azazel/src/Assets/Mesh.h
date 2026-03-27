@@ -4,7 +4,7 @@
 
 struct Mesh
 {
-	Mesh(std::vector<Vertex> aVertices, std::vector<unsigned short> aIndices) : myVertexBuffer(aVertices), myIndexBuffer(aIndices) {}
+	Mesh(const std::vector<Vertex>& aVertices, const std::vector<unsigned short>& aIndices) : myVertexBuffer(aVertices), myIndexBuffer(aIndices) {}
 	VertexBuffer myVertexBuffer;
 	IndexBuffer myIndexBuffer;
 };

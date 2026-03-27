@@ -21,8 +21,8 @@ struct DXGIInfoMessage
 class DXGIInfoManager
 {
 public:
-	DXGIInfoManager();
-	~DXGIInfoManager();
+	DXGIInfoManager() = default;
+	~DXGIInfoManager() = default;
 	DXGIInfoManager(const DXGIInfoManager&) = delete;
 	DXGIInfoManager& operator=(const DXGIInfoManager&) = delete;
 

@@ -14,7 +14,7 @@ public:
 	Engine(HWND& aHWND);
 	~Engine();
 
-	std::shared_ptr<Object> CreateObject(std::string aMeshName);
+	std::shared_ptr<Object> CreateObject(const std::string& aName);
 	void Update();
 
 private:

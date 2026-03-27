@@ -15,10 +15,6 @@ Camera::Camera()
 	myUp = myUpWorld;
 }
 
-Camera::~Camera()
-{
-}
-
 void Camera::Move(float aX, float aY, float aZ)
 {
 	myPosition += myForward * aZ;

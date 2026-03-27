@@ -24,12 +24,23 @@ void Scene::AddObject(std::shared_ptr<Object> aObject)
 	myObjects.emplace_back(aObject);
 }
 
-std::vector<std::shared_ptr<Object>> Scene::GetObjects() const
+const std::shared_ptr<Object>& Scene::GetObject(const std::string& aName)
+{
+	for (std::shared_ptr<Object> obj : myObjects)
+	{
+		if (obj->GetName() == aName)
+			return obj;
+	}
+
+	return nullptr;
+}
+
+const std::vector<std::shared_ptr<Object>>& Scene::GetObjects()
 {
 	return myObjects;
 }
 
-XMMATRIX Scene::GetEditorCameraViewMatrix() const
+const XMMATRIX& Scene::GetEditorCameraViewMatrix()
 {
 	return myEditorCamera->GetViewMatrix();
 }

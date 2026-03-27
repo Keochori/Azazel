@@ -3,10 +3,6 @@
 #include <d3dcompiler.h>
 #include "Graphics/Diagnostics/DXASSERT.h"
 
-VertexShader::VertexShader()
-{
-}
-
 void VertexShader::Create(ComPtr<ID3D11Device>& aDevice)
 {
 	ComPtr<ID3DBlob> blob;

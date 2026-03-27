@@ -1,6 +1,5 @@
 // Models
 - Normal Maps
-- Textures
 - PBR materials
 - Animations
 - Transparency
@@ -15,13 +14,18 @@
 - Skybox
 - Gizmo
 - Render States
-- Investigate optimizing binding vertex buffers (skip if models share same vertices/model)
 - add debug draw line
 
 // Other
 - Add debug text like framerate and stuff
-- Add names to Objects (maybe add Scene->GetObject(std::string aName))
 - Disable engine inputs when ImGui is taking inputs
+- png and other to .dds conversion
+- in premake try to copy entire asset folder instead of individual folders to bin
+- Fix jpg textures being darker
 
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
 - Check if its worth separating World View Projection into multiple buffers
+
+// Repeated checks
+- = default on all constructors
+- check const& returns and arguments

@@ -7,7 +7,7 @@ class Camera
 {
 public:
 	Camera();
-	virtual ~Camera();
+	virtual ~Camera() = default;
 
 	void Move(float aX, float aY, float aZ);
 	virtual void Rotate(float aPitch, float aYaw);

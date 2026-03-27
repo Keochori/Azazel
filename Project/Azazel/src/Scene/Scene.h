@@ -2,6 +2,8 @@
 #include "DirectXMath.h"
 #include <memory>
 
+#undef GetObject
+
 class EditorCamera;
 class Object;
 
@@ -13,8 +15,10 @@ public:
 
 	void Update();
 	void AddObject(std::shared_ptr<Object> aObject);
-	std::vector<std::shared_ptr<Object>> GetObjects() const;
-	DirectX::XMMATRIX GetEditorCameraViewMatrix() const;
+
+	const std::shared_ptr<Object>& GetObject(const std::string& aName);
+	const std::vector<std::shared_ptr<Object>>& GetObjects();
+	const DirectX::XMMATRIX& GetEditorCameraViewMatrix();
 
 private:
 	std::unique_ptr<EditorCamera> myEditorCamera;
