@@ -17,21 +17,23 @@ public:
 	void ClearBuffer(const float color[]);
 	void EndFrame();
 
+	void OnResize(UINT aWidth, UINT aHeight);
+
 	ComPtr<ID3D11Device>& GetDevice();
 	ComPtr<ID3D11DeviceContext>& GetContext();
+
+	float GetScreenWidth() const;
+	float GetScreenHeight() const;
 
 private:
 	void CreateDeviceAndSwapChainAndContext();
 	void CreateRTV();
-	void CreateDSV();
+	void CreateDSV(UINT aWidth, UINT aHeight);
 	void SetPrimitiveTopology();
-	void SetViewPort();
+	void SetViewPort(UINT aWidth, UINT aHeight);
 
 	void SetDefaultVS();
 	void SetDefaultPS();
-
-	float GetScreenWidth() const;
-	float GetScreenHeight() const;
 
 	ComPtr<ID3D11Device> myDevice = nullptr;
 	ComPtr<ID3D11DeviceContext> myContext = nullptr;

@@ -13,10 +13,10 @@ DX11::DX11(HWND& aHWND) : myHWND(aHWND)
 
 	CreateDeviceAndSwapChainAndContext();
 	CreateRTV();
-	CreateDSV();
+	CreateDSV(GetScreenWidth(), GetScreenHeight());
 
 	SetPrimitiveTopology();
-	SetViewPort();
+	SetViewPort(GetScreenWidth(), GetScreenHeight());
 	SetDefaultVS();
 	SetDefaultPS();
 }
@@ -80,7 +80,7 @@ void DX11::CreateRTV()
 	));
 }
 
-void DX11::CreateDSV()
+void DX11::CreateDSV(UINT aWidth, UINT aHeight)
 {
 	// Create Depth Stencil State
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
@@ -97,8 +97,8 @@ void DX11::CreateDSV()
 	// Create Depth Stencil Texture
 	ComPtr<ID3D11Texture2D> depthStencilTexture;
 	D3D11_TEXTURE2D_DESC textureDesc = {};
-	textureDesc.Width = GetScreenWidth();
-	textureDesc.Height = GetScreenHeight();
+	textureDesc.Width = aWidth;
+	textureDesc.Height = aHeight;
 	textureDesc.MipLevels = 1u;
 	textureDesc.ArraySize = 1u;
 	textureDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -135,11 +135,11 @@ void DX11::SetPrimitiveTopology()
 	DXASSERT(myContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 }
 
-void DX11::SetViewPort()
+void DX11::SetViewPort(UINT aWidth, UINT aHeight)
 {
 	D3D11_VIEWPORT viewport;
-	viewport.Width = GetScreenWidth();
-	viewport.Height = GetScreenHeight();
+	viewport.Width = aWidth;
+	viewport.Height = aHeight;
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1;
 	viewport.TopLeftX = 0;
@@ -164,6 +164,21 @@ void DX11::EndFrame()
 {
 	// Present frame
 	DXASSERT(mySwapChain->Present(1, 0));
+}
+
+void DX11::OnResize(UINT aWidth, UINT aHeight)
+{
+	if (aWidth == 0 || aHeight == 0)
+		return;
+
+	myContext->OMSetRenderTargets(0u, nullptr, nullptr);
+	myRTV.Reset();
+	myDSV.Reset();
+
+	mySwapChain->ResizeBuffers(0u, aWidth, aHeight, DXGI_FORMAT_UNKNOWN, 0u);
+	CreateRTV();
+	CreateDSV(aWidth, aHeight);
+	SetViewPort(aWidth, aHeight);
 }
 
 ComPtr<ID3D11Device>& DX11::GetDevice()

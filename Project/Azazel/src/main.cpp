@@ -11,6 +11,7 @@ int main()
 
 	Window window;
 	Engine engine(window.GetHWND());
+	SetWindowLongPtr(window.GetHWND(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&engine));
 
 	LOG_SUCCESS("STARTED AZAZEL");
 

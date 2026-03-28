@@ -16,6 +16,7 @@ public:
 
 	std::shared_ptr<Object> CreateObject(const std::string& aName);
 	void Update();
+	void OnResize(UINT aWidth, UINT aHeight);
 
 private:
 	void UpdateFrame();

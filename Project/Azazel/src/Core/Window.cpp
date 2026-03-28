@@ -3,6 +3,7 @@
 #include "Tools/Input.h"
 #include "Icon/resource.h"
 #include "imgui/imgui.h"
+#include "Core/Engine.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -115,6 +116,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
+
+		case WM_SIZE:
+		{
+			Engine* engine = reinterpret_cast<Engine*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+			if (engine)
+			{
+				UINT width = LOWORD(lParam);
+				UINT height = HIWORD(lParam);
+				engine->OnResize(width, height);
+			}
+		}
+		return 0;
 
 		case WM_PAINT:
 		{

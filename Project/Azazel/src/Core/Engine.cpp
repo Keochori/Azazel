@@ -12,7 +12,7 @@
 Engine::Engine(HWND& aHWND)
 {
 	myDX11 = std::make_unique<DX11>(aHWND);
-	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext());
+	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext());
 	myAssetManager = std::make_unique<AssetManager>();
 	myScene = std::make_shared<Scene>();
@@ -100,6 +100,12 @@ void Engine::Update()
 	UpdateFrame();
 	myImGuiManager->Render();
 	myDX11->EndFrame();
+}
+
+void Engine::OnResize(UINT aWidth, UINT aHeight)
+{
+	myDX11->OnResize(aWidth, aHeight);
+	myRenderer->SetAspectRatio(myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 }
 
 void Engine::UpdateFrame()

@@ -3,7 +3,7 @@
 #include "Scene/Object.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
-Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext) :
+Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, float aAspectRatio) :
 	myWVPBuffer(eBindType::VS, WVPBuffer(XMMatrixIdentity())),
 	myMaterialBuffer(eBindType::PS, MaterialBuffer(0, 0, XMFLOAT4( 0, 0, 0, 0 ))),
 	myInputLayout({ 
@@ -18,6 +18,8 @@ Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& a
 
 	myInputLayout.Create(aDevice);
 	myInputLayout.Bind(aContext);
+
+	myAspectRatio = aAspectRatio;
 }
 
 void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<std::shared_ptr<Object>>& aObjects)
@@ -64,7 +66,7 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 				XMConvertToRadians(transform.myRotation.x), XMConvertToRadians(transform.myRotation.y), XMConvertToRadians(transform.myRotation.z)) *
 			XMMatrixTranslation(transform.myPosition.x, transform.myPosition.y, transform.myPosition.z);
 		XMMATRIX viewMatrix = aViewMatrix;
-		XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), 1500.0f / 902.0f, 0.5f, 1000.f);
+		XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), myAspectRatio, 0.5f, 1000.f);
 
 		myWVPBuffer.UpdateData(aContext,
 			{
@@ -78,4 +80,9 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 		// Draw
 		DXASSERT(aContext->DrawIndexed((UINT)object->GetMesh()->myIndexBuffer.GetIndices().size(), 0u, 0u));
 	}
+}
+
+void Renderer::SetAspectRatio(float aApsect)
+{
+	myAspectRatio = aApsect;
 }
