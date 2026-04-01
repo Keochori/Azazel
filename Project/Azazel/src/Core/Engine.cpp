@@ -3,11 +3,11 @@
 #include "Graphics/DX11.h"
 #include "Graphics/Renderer.h"
 #include "Assets/AssetManager.h"
-#include "Scene/Object.h"
-#include "Scene/Scene.h"
-#include "Tools/Input.h"
-#include "Tools/Timer.h"
 #include "ImGui/ImGuiManager.h"
+#include "Scene/Scene.h"
+
+#include "Scene/Entity.h"
+#include "Scene/Components/Components.h"
 
 Engine::Engine(HWND& aHWND)
 {
@@ -17,79 +17,62 @@ Engine::Engine(HWND& aHWND)
 	myAssetManager = std::make_unique<AssetManager>();
 	myScene = std::make_shared<Scene>();
 
-	// Create scene objects
-	myScene->AddObject(CreateObject("gremlin"));
-	myScene->AddObject(CreateObject("chest"));
-	myScene->AddObject(CreateObject("cube"));
-	myScene->AddObject(CreateObject("cube2"));
-	myScene->AddObject(CreateObject("cube3"));
-	myScene->AddObject(CreateObject("cube4"));
-	myScene->AddObject(CreateObject("a"));
+	// Create entities
+	Entity gremlin = myScene->CreateEntity();
+	Entity gremlin2 = myScene->CreateEntity();
+	Entity chest = myScene->CreateEntity();
+	Entity cube1 = myScene->CreateEntity();
+	Entity cube2 = myScene->CreateEntity();
+	Entity cube3 = myScene->CreateEntity();
 
-	// Fetch scene objects
-	std::shared_ptr<Object> gremlin = myScene->GetObject("gremlin");
-	std::shared_ptr<Object> chest = myScene->GetObject("chest");
-	std::shared_ptr<Object> cube = myScene->GetObject("cube");
-	std::shared_ptr<Object> cube2 = myScene->GetObject("cube2");
-	std::shared_ptr<Object> cube3 = myScene->GetObject("cube3");
-	std::shared_ptr<Object> cube4 = myScene->GetObject("cube4");
+	// Fetch and add components
+	Transform& gremlinTransform = gremlin.GetComponent<TransformComponent>().myTransform;
+	Transform& gremlin2Transform = gremlin2.GetComponent<TransformComponent>().myTransform;
+	Transform& chestTransform = chest.GetComponent<TransformComponent>().myTransform;
+	Transform& cube1Transform = cube1.GetComponent<TransformComponent>().myTransform;
+	Transform& cube2Transform = cube2.GetComponent<TransformComponent>().myTransform;
+	Transform& cube3Transform = cube3.GetComponent<TransformComponent>().myTransform;
+	MeshComponent& gremlinMeshComponent = gremlin.AddComponent<MeshComponent>();
+	MeshComponent& gremlin2MeshComponent = gremlin2.AddComponent<MeshComponent>();
+	MeshComponent& chestMeshComponent = chest.AddComponent<MeshComponent>();
+	MeshComponent& cube1MeshComponent = cube1.AddComponent<MeshComponent>();
+	MeshComponent& cube2MeshComponent = cube2.AddComponent<MeshComponent>();
+	MeshComponent& cube3MeshComponent = cube3.AddComponent<MeshComponent>();
 
-	// Set Mesh
-	gremlin->SetMesh(myAssetManager->GetMesh("gremlin.fbx", myDX11->GetDevice()));
-	chest->SetMesh(myAssetManager->GetMesh("chest.fbx", myDX11->GetDevice()));
-	cube->SetMesh(myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice()));
-	cube2->SetMesh(myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice()));
-	cube3->SetMesh(myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice()));
-	cube4->SetMesh(myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice()));
+	// Mesh
+	gremlinMeshComponent.myMesh = myAssetManager->GetMesh("gremlin.fbx", myDX11->GetDevice());
+	gremlin2MeshComponent.myMesh = myAssetManager->GetMesh("gremlin.fbx", myDX11->GetDevice());
+	chestMeshComponent.myMesh = myAssetManager->GetMesh("chest.fbx", myDX11->GetDevice());
+	cube1MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
+	cube2MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
+	cube3MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
 
-	// Create Material
-	std::shared_ptr<Material> gremlinMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
-	std::shared_ptr<Material> chestMaterial = myAssetManager->CreateMaterial("chest", myDX11->GetDevice());
-	std::shared_ptr<Material> clothMaterial = myAssetManager->CreateMaterial("cloth", myDX11->GetDevice());
-	std::shared_ptr<Material> noAlbedoMaterial = myAssetManager->CreateMaterial("noTexture", myDX11->GetDevice());
-	std::shared_ptr<Material> noAlbedoMaterialOrange = myAssetManager->CreateMaterial("noTextureOrange", myDX11->GetDevice());
-	gremlinMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
-	chestMaterial->myAlbedoTexture = myAssetManager->GetTexture("chest.png", myDX11->GetDevice());
-	clothMaterial->myAlbedoTexture = myAssetManager->GetTexture("cloth.png", myDX11->GetDevice());
-
-	// Set Material
-	gremlin->SetMaterial(gremlinMaterial);
-	chest->SetMaterial(chestMaterial);
-	cube->SetMaterial(clothMaterial);
-	cube2->SetMaterial(noAlbedoMaterial);
-	cube3->SetMaterial(noAlbedoMaterialOrange);
-	cube3->GetMaterial()->SetAlbedoColor(217, 159, 35);
-	// No cube4 material to showcase missing material color
+	// Material
+	gremlinMeshComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
+	gremlinMeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
+	gremlin2MeshComponent.myMaterial = myAssetManager->CreateMaterial("gremlin2", myDX11->GetDevice());
+	gremlin2MeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
+	gremlin2MeshComponent.myMaterial->myAlbedoColor = Color(0, 0, 255);
+	chestMeshComponent.myMaterial = myAssetManager->CreateMaterial("chest", myDX11->GetDevice());
+	chestMeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("chest.png", myDX11->GetDevice());
+	cube1MeshComponent.myMaterial = myAssetManager->CreateMaterial("cube1", myDX11->GetDevice());
+	cube1MeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("cloth.png", myDX11->GetDevice());
+	cube2MeshComponent.myMaterial = myAssetManager->CreateMaterial("cube2", myDX11->GetDevice());
 
 	// Transform
-	Transform& gremlinTransform = gremlin->GetTransform();
-	gremlinTransform.SetPosition(gremlinTransform.myPosition.x, -1.5f, 4.0f);
-	gremlinTransform.SetScale(0.05f, 0.05f, 0.05f);
-
-	Transform& chestTransform = chest->GetTransform();
-	chestTransform.SetPosition(-2.5f, -1.5f, 4.0f);
-	chestTransform.SetScale(0.01f, 0.01f, 0.01f);
-
-	Transform& cubeTransform = cube->GetTransform();
-	cubeTransform.SetPosition(3.0f, -0.5f, 4.0f);
-
-	Transform& cubeTransform2 = cube2->GetTransform();
-	cubeTransform2.SetPosition(3.0f, -0.5f, 6.5f);
-
-	Transform& cubeTransform3 = cube3->GetTransform();
-	cubeTransform3.SetPosition(3.0f, -0.5f, 9.0f);
-
-	Transform& cubeTransform4 = cube4->GetTransform();
-	cubeTransform4.SetPosition(3.0f, -0.5f, 11.5f);
+	gremlinTransform.myScale = { 0.05f,0.05f,0.05f };
+	gremlinTransform.myPosition = { 0,-1.5f,4.0f};
+	gremlin2Transform.myScale = { 0.05f,0.05f,0.05f };
+	gremlin2Transform.myPosition = { 0,-1.0f,6.0f };
+	chestTransform.myScale = { 0.01f,0.01f,0.01f };
+	chestTransform.myPosition = { -2.5f, -1.5f, 4.0f };
+	cube1Transform.myPosition = { 3.0f, -0.5f, 4.0f };
+	cube2Transform.myPosition = { 3.0f, -0.5f, 6.5f };
+	cube3Transform.myPosition = { 3.0f, -0.5f, 9.0f };
 }
 
 Engine::~Engine()
 {
-}
-
-std::shared_ptr<Object> Engine::CreateObject(const std::string& aName)
-{
-	return std::make_shared<Object>(aName);
 }
 
 void Engine::Update()
@@ -114,5 +97,5 @@ void Engine::UpdateFrame()
 	myDX11->ClearBuffer(color);
 
 	myScene->Update();
-	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetObjects());
+	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
 }

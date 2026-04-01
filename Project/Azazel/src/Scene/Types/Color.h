@@ -13,16 +13,16 @@ struct Color
 	Color(int aR, int aG, int aB, int aA)
 	{
 		myR = std::clamp(aR, 0, 255);
-		myG = std::clamp(aR, 0, 255);
-		myB = std::clamp(aR, 0, 255);
-		myA = std::clamp(aR, 0, 255);
+		myG = std::clamp(aG, 0, 255);
+		myB = std::clamp(aB, 0, 255);
+		myA = std::clamp(aA, 0, 255);
 	}
 
 	Color(int aR, int aG, int aB)
 	{
 		myR = std::clamp(aR, 0, 255);
-		myG = std::clamp(aR, 0, 255);
-		myB = std::clamp(aR, 0, 255);
+		myG = std::clamp(aG, 0, 255);
+		myB = std::clamp(aB, 0, 255);
 		myA = 255;
 	}
 

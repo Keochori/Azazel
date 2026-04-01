@@ -1,11 +1,11 @@
 #pragma once
 #include "DirectXMath.h"
+#include "entt/entt.hpp"
 #include <memory>
 
-#undef GetObject
-
 class EditorCamera;
-class Object;
+struct RenderData;
+class Entity;
 
 class Scene
 {
@@ -14,14 +14,16 @@ public:
 	~Scene();
 
 	void Update();
-	void AddObject(std::shared_ptr<Object> aObject);
 
-	const std::shared_ptr<Object>& GetObject(const std::string& aName);
-	const std::vector<std::shared_ptr<Object>>& GetObjects();
+	Entity& CreateEntity();
+	const std::vector<RenderData>& GetRenderData();
 	const DirectX::XMMATRIX& GetEditorCameraViewMatrix();
 
 private:
+	entt::registry myRegistry;
+	std::vector<Entity> myEntities;
 	std::unique_ptr<EditorCamera> myEditorCamera;
-	std::vector<std::shared_ptr<Object>> myObjects;
+
+	std::vector<RenderData> myRenderData;
 };
 

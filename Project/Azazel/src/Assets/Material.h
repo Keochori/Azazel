@@ -1,7 +1,8 @@
 #pragma once
 #include "Texture.h"
-#include "Scene/Color.h"
+#include "Scene/Types/Color.h"
 #include "Graphics/Bindables/Sampler.h"
+#include <algorithm>
 #include <memory>
 
 struct Material
@@ -13,17 +14,12 @@ struct Material
 
 	void SetAlbedoColor(int aR, int aG, int aB, int aA)
 	{
-		myAlbedoColor.myR = std::clamp(aR, 0, 255);
-		myAlbedoColor.myG = std::clamp(aG, 0, 255);
-		myAlbedoColor.myB = std::clamp(aB, 0, 255);
-		myAlbedoColor.myA = std::clamp(aA, 0, 255);
+		myAlbedoColor = Color(aR, aG, aB, aA);
 	}
 
 	void SetAlbedoColor(int aR, int aG, int aB)
 	{
-		myAlbedoColor.myR = std::clamp(aR, 0, 255);
-		myAlbedoColor.myG = std::clamp(aG, 0, 255);
-		myAlbedoColor.myB = std::clamp(aB, 0, 255);
+		myAlbedoColor = Color(aR, aG, aB);
 	}
 
 	std::shared_ptr<Texture> myAlbedoTexture;

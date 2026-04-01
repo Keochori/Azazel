@@ -1,11 +1,14 @@
 #include "pch.h"
 #include "Renderer.h"
-#include "Scene/Object.h"
+#include "RenderData.h"
+#include "Assets/Mesh.h"
+#include "Assets/Material.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
 Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, float aAspectRatio) :
 	myWVPBuffer(eBindType::VS, WVPBuffer(XMMatrixIdentity())),
-	myMaterialBuffer(eBindType::PS, MaterialBuffer(0, 0, XMFLOAT4( 0, 0, 0, 0 ))),
+	myMaterialBuffer(eBindType::PS, MaterialBuffer(0, 0, XMFLOAT4(0, 0, 0, 0))),
+	myDefaultSampler(Sampler()),
 	myInputLayout({ 
 		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"ALBEDOTEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0} })
@@ -16,28 +19,33 @@ Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& a
 	myMaterialBuffer.Create(aDevice);
 	myMaterialBuffer.Bind(aContext);
 
+	myDefaultSampler.Create(aDevice);
+	myDefaultSampler.Bind(aContext);
+
 	myInputLayout.Create(aDevice);
 	myInputLayout.Bind(aContext);
 
 	myAspectRatio = aAspectRatio;
 }
 
-void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<std::shared_ptr<Object>>& aObjects)
+void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderData)
 {
-	for (std::shared_ptr<Object> object : aObjects)
+	for (RenderData data : aRenderData)
 	{
-		if (!object->GetMesh())
+		if (!data.myMesh)
 			continue;
 
-		object->GetMesh()->myVertexBuffer.Bind(aContext);
-		object->GetMesh()->myIndexBuffer.Bind(aContext);
+		data.myMesh->myVertexBuffer.Bind(aContext);
+		data.myMesh->myIndexBuffer.Bind(aContext);
 
 		// Update material data
-		if (object->GetMaterial())
+		int hasMaterial = 0;
+		int hasAlbedoTexture = 0;
+		if (data.myMaterial)
 		{
-			std::shared_ptr<Material> material = object->GetMaterial();
+			hasMaterial = 1;
+			std::shared_ptr<Material> material = data.myMaterial;
 
-			int hasAlbedoTexture = 0;
 			if (material->myAlbedoTexture)
 			{
 				hasAlbedoTexture = 1;
@@ -46,7 +54,7 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 			}
 
 			constexpr float inverse255 = 1.0f / 255.0f;
-			myMaterialBuffer.UpdateData(aContext, MaterialBuffer(1, hasAlbedoTexture, DirectX::XMFLOAT4(
+			myMaterialBuffer.UpdateData(aContext, MaterialBuffer(hasMaterial, hasAlbedoTexture, DirectX::XMFLOAT4(
 				material->myAlbedoColor.myR * inverse255,
 				material->myAlbedoColor.myG * inverse255,
 				material->myAlbedoColor.myB * inverse255,
@@ -55,11 +63,11 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 		}
 		else
 		{
-			myMaterialBuffer.UpdateData(aContext, MaterialBuffer(0, 0, DirectX::XMFLOAT4()));
+			myMaterialBuffer.UpdateData(aContext, MaterialBuffer(hasMaterial, hasAlbedoTexture, DirectX::XMFLOAT4()));
 		}
 
 		// Update WVPBuffer
-		Transform& transform = object->GetTransform();
+		Transform& transform = data.myTransform;
 		XMMATRIX transformMatrix = 
 			XMMatrixScaling(transform.myScale.x, transform.myScale.y, transform.myScale.z) *
 			XMMatrixRotationRollPitchYaw(
@@ -78,7 +86,7 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 			});
 
 		// Draw
-		DXASSERT(aContext->DrawIndexed((UINT)object->GetMesh()->myIndexBuffer.GetIndices().size(), 0u, 0u));
+		DXASSERT(aContext->DrawIndexed((UINT)data.myMesh->myIndexBuffer.GetIndices().size(), 0u, 0u));
 	}
 }
 

@@ -1,12 +1,19 @@
 #include "pch.h"
 #include "Scene.h"
-#include "Object.h"
+#include "Entity.h"
+#include "Components/Components.h"
 #include "Camera/EditorCamera.h"
-#include "Tools/Timer.h"
+#include "Graphics/RenderData.h"
 
 Scene::Scene()
 {
-	myEditorCamera = std::make_unique<EditorCamera>(5, 2, 10, 2, 6);
+	float cameraStartingSpeed = 5;
+	float cameraMinSpeed = 2;
+	float cameraMaxSpeed = 10;
+	float cameraRotationSpeed = 2;
+	float cameraZoomSpeed = 6;
+	myEditorCamera = std::make_unique<EditorCamera>
+		(cameraStartingSpeed, cameraMinSpeed, cameraMaxSpeed, cameraRotationSpeed, cameraZoomSpeed);
 }
 
 Scene::~Scene()
@@ -16,28 +23,30 @@ Scene::~Scene()
 void Scene::Update()
 {
 	myEditorCamera->Update();
-	myObjects[0]->GetTransform().myRotation.y += 40.0f * TIMER.GetDeltaTime();
 }
 
-void Scene::AddObject(std::shared_ptr<Object> aObject)
+Entity& Scene::CreateEntity()
 {
-	myObjects.emplace_back(aObject);
+	Entity newEntity(myRegistry);
+	newEntity.AddComponent<TransformComponent>();
+	myEntities.emplace_back(newEntity);
+	return newEntity;
 }
 
-const std::shared_ptr<Object>& Scene::GetObject(const std::string& aName)
+const std::vector<RenderData>& Scene::GetRenderData()
 {
-	for (std::shared_ptr<Object> obj : myObjects)
+	myRenderData.clear();
+
+	auto view = myRegistry.view<TransformComponent, MeshComponent>();
+	for (auto entity : view)
 	{
-		if (obj->GetName() == aName)
-			return obj;
+		TransformComponent& transformComponent = view.get<TransformComponent>(entity);
+		MeshComponent& meshComponent = view.get<MeshComponent>(entity);
+
+		myRenderData.emplace_back(transformComponent.myTransform, meshComponent.myMesh, meshComponent.myMaterial);
 	}
 
-	return nullptr;
-}
-
-const std::vector<std::shared_ptr<Object>>& Scene::GetObjects()
-{
-	return myObjects;
+	return myRenderData;
 }
 
 const XMMATRIX& Scene::GetEditorCameraViewMatrix()
