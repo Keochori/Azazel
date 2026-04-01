@@ -48,9 +48,7 @@ project "Azazel"
         "Azazel/src/**.hpp",
         "Azazel/src/**.h",
         "Azazel/src/**.hlsl",
-        "Azazel/vendor/assimp/**",
-        "Azazel/vendor/imgui/**",
-        "Azazel/vendor/directxtex/**"
+        "Azazel/vendor/**"
         }
 
     includedirs {

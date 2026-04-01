@@ -25,6 +25,7 @@
 
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
 - Check if its worth separating World View Projection into multiple buffers
+- Why is fps halved when alt+enter mode(windowed fullscreen)
 
 // Repeated checks
 - = default on all constructors
