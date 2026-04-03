@@ -13,17 +13,18 @@ Engine::Engine(HWND& aHWND)
 {
 	myDX11 = std::make_unique<DX11>(aHWND);
 	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
-	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext());
 	myAssetManager = std::make_unique<AssetManager>();
 	myScene = std::make_shared<Scene>();
+	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myScene.get());
 
 	// Create entities
-	Entity gremlin = myScene->CreateEntity();
-	Entity gremlin2 = myScene->CreateEntity();
-	Entity chest = myScene->CreateEntity();
-	Entity cube1 = myScene->CreateEntity();
-	Entity cube2 = myScene->CreateEntity();
-	Entity cube3 = myScene->CreateEntity();
+	Entity empty = myScene->CreateEntity("empty");
+	Entity gremlin = myScene->CreateEntity("gremlin");
+	Entity gremlin2 = myScene->CreateEntity("gremlin2");
+	Entity chest = myScene->CreateEntity("chest");
+	Entity cube1 = myScene->CreateEntity("cube1");
+	Entity cube2 = myScene->CreateEntity("cube2");
+	Entity cube3 = myScene->CreateEntity("cube3");
 
 	// Fetch and add components
 	Transform& gremlinTransform = gremlin.GetComponent<TransformComponent>().myTransform;

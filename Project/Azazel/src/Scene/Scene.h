@@ -15,7 +15,9 @@ public:
 
 	void Update();
 
-	Entity& CreateEntity();
+	Entity& CreateEntity(const std::string& aName);
+	std::vector<Entity>& GetEntities();
+	entt::registry& GetRegistry();
 	const std::vector<RenderData>& GetRenderData();
 	const DirectX::XMMATRIX& GetEditorCameraViewMatrix();
 

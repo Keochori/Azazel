@@ -4,8 +4,11 @@
 class Entity
 {
 public:
-	Entity(entt::registry& aRegistry);
+	Entity(entt::registry& aRegistry, const std::string& aName);
 	~Entity() = default;
+
+	const std::string& GetName();
+	const entt::entity& GetHandle();
 
 	template<typename T, typename... Args>
 	T& AddComponent(Args&&... aArgs)
@@ -50,6 +53,7 @@ public:
 	}
 
 private:
+	std::string myName;
 	entt::entity myHandle;
 	entt::registry& myRegistry;
 };

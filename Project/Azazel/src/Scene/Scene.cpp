@@ -25,12 +25,23 @@ void Scene::Update()
 	myEditorCamera->Update();
 }
 
-Entity& Scene::CreateEntity()
+Entity& Scene::CreateEntity(const std::string& aName)
 {
-	Entity newEntity(myRegistry);
+	myEntities.emplace_back(myRegistry, aName);
+	Entity& newEntity = myEntities.back();
+
 	newEntity.AddComponent<TransformComponent>();
-	myEntities.emplace_back(newEntity);
 	return newEntity;
+}
+
+std::vector<Entity>& Scene::GetEntities()
+{
+	return myEntities;
+}
+
+entt::registry& Scene::GetRegistry()
+{
+	return myRegistry;
 }
 
 const std::vector<RenderData>& Scene::GetRenderData()
