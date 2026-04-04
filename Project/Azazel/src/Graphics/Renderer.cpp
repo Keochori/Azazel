@@ -90,7 +90,9 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 	}
 }
 
-void Renderer::SetAspectRatio(float aApsect)
+void Renderer::SetAspectRatio(float aAspect)
 {
-	myAspectRatio = aApsect;
+	if (aAspect <= 0)
+		return;
+	myAspectRatio = aAspect;
 }

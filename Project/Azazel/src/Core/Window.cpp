@@ -124,7 +124,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				UINT width = LOWORD(lParam);
 				UINT height = HIWORD(lParam);
-				engine->OnResize(width, height);
+				engine->OnWindowResize(width, height);
 			}
 		}
 		return 0;

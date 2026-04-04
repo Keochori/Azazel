@@ -15,7 +15,7 @@ public:
 	~Renderer() = default;
 
 	void Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderData);
-	void SetAspectRatio(float aApsect);
+	void SetAspectRatio(float aAspect);
 
 private:
 	float myAspectRatio;

@@ -22,16 +22,22 @@ struct MeshComponent;
 class ImGuiManager
 {
 public:
-	ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, Scene* aScene);
+	ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, 
+		ComPtr<ID3D11ShaderResourceView>& aTextureSRV, Scene* aScene);
 	~ImGuiManager() = default;
 
 	void NewFrame();
 	void Update();
 	void Render();
+	const ImVec2& GetSceneTabSize();
 
+	void MainMenuBar();
 	void FPSCounterTab();
+	void SceneTab();
 	void HierarchyTab();
 	void InspectorTab();
+	void AssetsTab();
+	void ConsoleTab();
 
 	// Component draw logic
 	template <typename T>
@@ -42,6 +48,9 @@ public:
 	void DrawComponentUI(MeshComponent& aMeshComponent);
 
 private:
+	ComPtr<ID3D11ShaderResourceView>& myTextureSRV; // Texture that the world gets rendered into
+	ImVec2 mySceneTabSize;
+
 	int myFrameCounter = 0;
 	int myCurrentFPS = 0;
 

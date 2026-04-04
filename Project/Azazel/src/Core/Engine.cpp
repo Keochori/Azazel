@@ -5,17 +5,18 @@
 #include "Assets/AssetManager.h"
 #include "ImGui/ImGuiManager.h"
 #include "Scene/Scene.h"
+#include "Tools/Input.h"
 
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
 
-Engine::Engine(HWND& aHWND)
+Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 {
 	myDX11 = std::make_unique<DX11>(aHWND);
 	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 	myAssetManager = std::make_unique<AssetManager>();
 	myScene = std::make_shared<Scene>();
-	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myScene.get());
+	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetTextureSRV(), myScene.get());
 
 	// Create entities
 	Entity empty = myScene->CreateEntity("empty");
@@ -78,25 +79,78 @@ Engine::~Engine()
 
 void Engine::Update()
 {
-	myImGuiManager->NewFrame();
-	myImGuiManager->Update();
-	myDX11->BeginFrame();
-	UpdateFrame();
-	myImGuiManager->Render();
-	myDX11->EndFrame();
+	// Fullscreen Mode button
+	if (INPUT.IsKeyPressed(eKeys::F))
+	{
+		// Dont change screen mode if window size is too small
+		if (myDX11->GetScreenWidth() < 1 || myDX11->GetScreenHeight() < 1)
+			return;
+
+		myFullScreenMode = !myFullScreenMode;
+		if (myFullScreenMode)
+		{
+			OnWindowResize(myDX11->GetScreenWidth(), myDX11->GetScreenHeight());
+			myCurrentSceneTabSize = ImVec2(); // Forces OnTextureResize in update-loop after exiting fullscreen mode
+		}
+		else
+		{
+			OnTextureResize(ImVec2(myDX11->GetScreenWidth(), myDX11->GetScreenHeight())); // Makes sure texture and DSV are the same size again
+		}
+	}
+
+	// Rendering & DX11
+	if (myFullScreenMode)
+	{
+		myDX11->ClearRTV(true);
+		myDX11->BindRTV(true);
+		UpdateAndRenderGame();
+		myDX11->PresentFrame();
+	}
+	else
+	{
+		// Render Scene to Texture2D
+		myDX11->SetViewPort(myCurrentSceneTabSize.x, myCurrentSceneTabSize.y);
+		myDX11->ClearTextureRTV();
+		myDX11->BindTextureRTV();
+		UpdateAndRenderGame();
+
+		// Now render ImGui to window
+		myDX11->SetViewPort(myDX11->GetScreenWidth(), myDX11->GetScreenHeight());
+		myDX11->ClearRTV();
+		myDX11->BindRTV();
+		myImGuiManager->NewFrame();
+		myImGuiManager->Update();
+		myImGuiManager->Render();
+		myDX11->PresentFrame();
+
+		// Check if ImGui scene tab was resized
+		ImVec2 sceneTabSize = myImGuiManager->GetSceneTabSize();
+		if (myCurrentSceneTabSize != sceneTabSize)
+			OnTextureResize(sceneTabSize);
+	}
 }
 
-void Engine::OnResize(UINT aWidth, UINT aHeight)
+void Engine::OnWindowResize(UINT aWidth, UINT aHeight)
 {
-	myDX11->OnResize(aWidth, aHeight);
+	if (aWidth <= 0 || aHeight <= 0)
+		return;
+
+	myDX11->OnWindowResize(aWidth, aHeight, myFullScreenMode);
 	myRenderer->SetAspectRatio(myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 }
 
-void Engine::UpdateFrame()
+void Engine::OnTextureResize(ImVec2 aSize)
 {
-	const float color[] = { 0.2f,0.2f,0.2f,1.0f };
-	myDX11->ClearBuffer(color);
+	if (aSize.x <= 0 || aSize.y <= 0)
+		return;
 
+	myDX11->OnTextureResize(aSize.x, aSize.y);
+	myRenderer->SetAspectRatio(aSize.x / aSize.y);
+	myCurrentSceneTabSize = aSize;
+}
+
+void Engine::UpdateAndRenderGame()
+{
 	myScene->Update();
 	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
 }
