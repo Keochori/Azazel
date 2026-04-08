@@ -14,7 +14,7 @@ public:
 	AssetManager() = default;
 	~AssetManager() = default;
 
-	const std::shared_ptr<Material>& CreateMaterial(const std::string& aName, ComPtr<ID3D11Device>& aDevice);
+	const std::shared_ptr<Material>& CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice);
 
 	const std::shared_ptr<Mesh>& GetMesh(std::string aMeshName, ComPtr<ID3D11Device>& aDevice);
 	const std::shared_ptr<Texture>& GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice);

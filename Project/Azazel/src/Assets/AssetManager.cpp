@@ -7,15 +7,23 @@
 #include "TextureData.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
-const std::shared_ptr<Material>& AssetManager::CreateMaterial(const std::string& aName, ComPtr<ID3D11Device>& aDevice)
+const std::shared_ptr<Material>& AssetManager::CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice)
 {
-    Sampler sampler;
-    sampler.Create(aDevice);
+    if (myMaterialRegistry.find(aMaterialName) == myMaterialRegistry.end())
+    {
+        Sampler sampler;
+        sampler.Create(aDevice);
 
-    std::shared_ptr<Material> material = std::make_shared<Material>(sampler);
+        std::shared_ptr<Material> material = std::make_shared<Material>(sampler);
 
-    myMaterialRegistry.emplace(aName, material);
-    return material;
+        myMaterialRegistry.emplace(aMaterialName, material);
+        return material;
+    }
+    else
+    {
+        LOG_WARNING("Material '" + aMaterialName + "' already exists.");
+        return myMaterialRegistry.at(aMaterialName);
+    }
 }
 
 const std::shared_ptr<Mesh>& AssetManager::GetMesh(std::string aMeshName, ComPtr<ID3D11Device>& aDevice)
