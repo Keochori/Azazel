@@ -24,7 +24,7 @@ ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID
 
 	// Register components to draw
 	RegisterComponentToDraw<TransformComponent>("Transform");
-	RegisterComponentToDraw<MeshComponent>("Mesh");
+	RegisterComponentToDraw<ModelComponent>("Model");
 }
 
 void ImGuiManager::NewFrame()
@@ -178,7 +178,7 @@ void ImGuiManager::DrawComponentUI(TransformComponent& aTransformComponent)
 	ImGui::DragFloat3("Position", &aTransformComponent.myTransform.myPosition.x, 0.1f);
 }
 
-void ImGuiManager::DrawComponentUI(MeshComponent& aMeshComponent)
+void ImGuiManager::DrawComponentUI(ModelComponent& aModelComponent)
 {
 	
 }

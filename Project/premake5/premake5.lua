@@ -24,8 +24,8 @@ project "Azazel"
 
     AssimpDLL = "Azazel/vendor/assimp/assimp-vc143-mt.dll"
     postbuildcommands { 
-        "{MKDIR} %{cfg.targetdir}/resources/meshes",
-        "{COPYDIR} ../Assets/Meshes %{cfg.targetdir}/resources/meshes",
+        "{MKDIR} %{cfg.targetdir}/resources/models",
+        "{COPYDIR} ../Assets/Models %{cfg.targetdir}/resources/models",
         "{MKDIR} %{cfg.targetdir}/resources/textures",
         "{COPYDIR} ../Assets/Textures %{cfg.targetdir}/resources/textures",
         "{COPYFILE} %[" .. AssimpDLL .. "] %{cfg.targetdir}",

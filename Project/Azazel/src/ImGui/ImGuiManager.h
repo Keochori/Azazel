@@ -17,7 +17,7 @@ class Entity;
 
 // Forward Declare for every registered component
 struct TransformComponent;
-struct MeshComponent;
+struct ModelComponent;
 
 class ImGuiManager
 {
@@ -45,7 +45,7 @@ public:
 
 	// Add and define for every registered component
 	void DrawComponentUI(TransformComponent& aTransformComponent);
-	void DrawComponentUI(MeshComponent& aMeshComponent);
+	void DrawComponentUI(ModelComponent& aModelComponent);
 
 private:
 	ComPtr<ID3D11ShaderResourceView>& myTextureSRV; // Texture that the world gets rendered into

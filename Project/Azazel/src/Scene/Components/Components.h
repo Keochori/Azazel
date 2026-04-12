@@ -2,7 +2,7 @@
 #include "Scene/Types/Transform.h"
 #include <memory>
 
-struct Mesh;
+struct Model;
 struct Material;
 
 struct TransformComponent
@@ -10,8 +10,8 @@ struct TransformComponent
 	Transform myTransform;
 };
 
-struct MeshComponent
+struct ModelComponent
 {
-	std::shared_ptr<Mesh> myMesh;
+	std::shared_ptr<Model> myModel;
 	std::shared_ptr<Material> myMaterial;
 };

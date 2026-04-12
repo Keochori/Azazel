@@ -48,13 +48,13 @@ const std::vector<RenderData>& Scene::GetRenderData()
 {
 	myRenderData.clear();
 
-	auto view = myRegistry.view<TransformComponent, MeshComponent>();
+	auto view = myRegistry.view<TransformComponent, ModelComponent>();
 	for (auto entity : view)
 	{
 		TransformComponent& transformComponent = view.get<TransformComponent>(entity);
-		MeshComponent& meshComponent = view.get<MeshComponent>(entity);
+		ModelComponent& modelComponent = view.get<ModelComponent>(entity);
 
-		myRenderData.emplace_back(transformComponent.myTransform, meshComponent.myMesh, meshComponent.myMaterial);
+		myRenderData.emplace_back(transformComponent.myTransform, modelComponent.myModel, modelComponent.myMaterial);
 	}
 
 	return myRenderData;

@@ -2,7 +2,7 @@
 #include "Graphics/Bindables/Vertex.h"
 #include <vector>
 
-struct MeshData
+struct ModelData
 {
 	std::vector<Vertex> myVertices;
 	std::vector<unsigned short> myIndices;

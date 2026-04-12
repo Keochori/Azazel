@@ -34,32 +34,32 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	Transform& cube1Transform = cube1.GetComponent<TransformComponent>().myTransform;
 	Transform& cube2Transform = cube2.GetComponent<TransformComponent>().myTransform;
 	Transform& cube3Transform = cube3.GetComponent<TransformComponent>().myTransform;
-	MeshComponent& gremlinMeshComponent = gremlin.AddComponent<MeshComponent>();
-	MeshComponent& gremlin2MeshComponent = gremlin2.AddComponent<MeshComponent>();
-	MeshComponent& chestMeshComponent = chest.AddComponent<MeshComponent>();
-	MeshComponent& cube1MeshComponent = cube1.AddComponent<MeshComponent>();
-	MeshComponent& cube2MeshComponent = cube2.AddComponent<MeshComponent>();
-	MeshComponent& cube3MeshComponent = cube3.AddComponent<MeshComponent>();
+	ModelComponent& gremlinModelComponent = gremlin.AddComponent<ModelComponent>();
+	ModelComponent& gremlin2ModelComponent = gremlin2.AddComponent<ModelComponent>();
+	ModelComponent& chestModelComponent = chest.AddComponent<ModelComponent>();
+	ModelComponent& cube1ModelComponent = cube1.AddComponent<ModelComponent>();
+	ModelComponent& cube2ModelComponent = cube2.AddComponent<ModelComponent>();
+	ModelComponent& cube3ModelComponent = cube3.AddComponent<ModelComponent>();
 
-	// Mesh
-	gremlinMeshComponent.myMesh = myAssetManager->GetMesh("gremlin.fbx", myDX11->GetDevice());
-	gremlin2MeshComponent.myMesh = myAssetManager->GetMesh("gremlin.fbx", myDX11->GetDevice());
-	chestMeshComponent.myMesh = myAssetManager->GetMesh("chest.fbx", myDX11->GetDevice());
-	cube1MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
-	cube2MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
-	cube3MeshComponent.myMesh = myAssetManager->GetMesh("cube.fbx", myDX11->GetDevice());
+	// Model
+	gremlinModelComponent.myModel = myAssetManager->GetModel("gremlin.fbx", myDX11->GetDevice());
+	gremlin2ModelComponent.myModel = myAssetManager->GetModel("gremlin.fbx", myDX11->GetDevice());
+	chestModelComponent.myModel = myAssetManager->GetModel("chest.fbx", myDX11->GetDevice());
+	cube1ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
+	cube2ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
+	cube3ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
 
 	// Material
-	gremlinMeshComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
-	gremlinMeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
-	gremlin2MeshComponent.myMaterial = myAssetManager->CreateMaterial("gremlin2", myDX11->GetDevice());
-	gremlin2MeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
-	gremlin2MeshComponent.myMaterial->myAlbedoColor = Color(0, 0, 255);
-	chestMeshComponent.myMaterial = myAssetManager->CreateMaterial("chest", myDX11->GetDevice());
-	chestMeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("chest.png", myDX11->GetDevice());
-	cube1MeshComponent.myMaterial = myAssetManager->CreateMaterial("cube1", myDX11->GetDevice());
-	cube1MeshComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("cloth.png", myDX11->GetDevice());
-	cube2MeshComponent.myMaterial = myAssetManager->CreateMaterial("cube2", myDX11->GetDevice());
+	gremlinModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
+	gremlinModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
+	gremlin2ModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin2", myDX11->GetDevice());
+	gremlin2ModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());
+	gremlin2ModelComponent.myMaterial->myAlbedoColor = Color(0, 0, 255);
+	chestModelComponent.myMaterial = myAssetManager->CreateMaterial("chest", myDX11->GetDevice());
+	chestModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("chest.png", myDX11->GetDevice());
+	cube1ModelComponent.myMaterial = myAssetManager->CreateMaterial("cube1", myDX11->GetDevice());
+	cube1ModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("cloth.png", myDX11->GetDevice());
+	cube2ModelComponent.myMaterial = myAssetManager->CreateMaterial("cube2", myDX11->GetDevice());
 
 	// Transform
 	gremlinTransform.myScale = { 0.05f,0.05f,0.05f };

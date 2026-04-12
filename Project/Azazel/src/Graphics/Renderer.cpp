@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Renderer.h"
 #include "RenderData.h"
-#include "Assets/Mesh.h"
+#include "Assets/Model.h"
 #include "Assets/Material.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
@@ -30,21 +30,21 @@ Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& a
 
 void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderData)
 {
-	for (RenderData data : aRenderData)
+	for (RenderData renderData : aRenderData)
 	{
-		if (!data.myMesh)
+		if (!renderData.myModel)
 			continue;
 
-		data.myMesh->myVertexBuffer.Bind(aContext);
-		data.myMesh->myIndexBuffer.Bind(aContext);
+		renderData.myModel->myVertexBuffer.Bind(aContext);
+		renderData.myModel->myIndexBuffer.Bind(aContext);
 
 		// Update material data
 		int hasMaterial = 0;
 		int hasAlbedoTexture = 0;
-		if (data.myMaterial)
+		if (renderData.myMaterial)
 		{
 			hasMaterial = 1;
-			std::shared_ptr<Material> material = data.myMaterial;
+			std::shared_ptr<Material> material = renderData.myMaterial;
 
 			if (material->myAlbedoTexture)
 			{
@@ -67,7 +67,7 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 		}
 
 		// Update WVPBuffer
-		Transform& transform = data.myTransform;
+		Transform& transform = renderData.myTransform;
 		XMMATRIX transformMatrix = 
 			XMMatrixScaling(transform.myScale.x, transform.myScale.y, transform.myScale.z) *
 			XMMatrixRotationRollPitchYaw(
@@ -86,7 +86,7 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 			});
 
 		// Draw
-		DXASSERT(aContext->DrawIndexed((UINT)data.myMesh->myIndexBuffer.GetIndices().size(), 0u, 0u));
+		DXASSERT(aContext->DrawIndexed((UINT)renderData.myModel->myIndexBuffer.GetIndices().size(), 0u, 0u));
 	}
 }
 
