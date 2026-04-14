@@ -7,7 +7,7 @@
 
 Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, float aAspectRatio) :
 	myWVPBuffer(eBindType::VS, WVPBuffer(XMMatrixIdentity())),
-	myMaterialBuffer(eBindType::PS, MaterialBuffer(0, 0, XMFLOAT4(0, 0, 0, 0))),
+	myMaterialBuffer(eBindType::PS, MaterialBuffer(false, false, XMFLOAT4(0, 0, 0, 0))),
 	myDefaultSampler(Sampler()),
 	myInputLayout({ 
 		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
@@ -39,26 +39,26 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 		renderData.myModel->myIndexBuffer.Bind(aContext);
 
 		// Update material data
-		int hasMaterial = 0;
-		int hasAlbedoTexture = 0;
+		int hasMaterial = false;
+		int hasAlbedoTexture = false;
 		if (renderData.myMaterial)
 		{
-			hasMaterial = 1;
+			hasMaterial = true;
 			std::shared_ptr<Material> material = renderData.myMaterial;
 
 			if (material->myAlbedoTexture)
 			{
-				hasAlbedoTexture = 1;
+				hasAlbedoTexture = true;
 				material->mySampler.Bind(aContext);
 				material->myAlbedoTexture->mySRV.Bind(aContext);
 			}
 
-			constexpr float inverse255 = 1.0f / 255.0f;
+			constexpr float inverseRGB = 1.0f / 255.0f;
 			myMaterialBuffer.UpdateData(aContext, MaterialBuffer(hasMaterial, hasAlbedoTexture, DirectX::XMFLOAT4(
-				material->myAlbedoColor.myR * inverse255,
-				material->myAlbedoColor.myG * inverse255,
-				material->myAlbedoColor.myB * inverse255,
-				material->myAlbedoColor.myA * inverse255
+				material->myAlbedoColor.myR * inverseRGB,
+				material->myAlbedoColor.myG * inverseRGB,
+				material->myAlbedoColor.myB * inverseRGB,
+				material->myAlbedoColor.myA * inverseRGB
 			)));
 		}
 		else

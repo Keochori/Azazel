@@ -1,5 +1,5 @@
 sampler textureSampler;
-Texture2D albedoTexture;
+Texture2D albedoTexture2D;
 
 cbuffer MaterialBuffer
 {
@@ -16,13 +16,13 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-    if (hasMaterial == 1)
+    if (hasMaterial)
     {
-        if (hasAlbedoTexture == 1)
+        if (hasAlbedoTexture)
         {
             // Multiply albedoTexture by albedoColor
-            float4 albedo = albedoTexture.Sample(textureSampler, input.albedoTexCoord);
-            return albedo * albedoColor;
+            float4 albedoTexture = albedoTexture2D.Sample(textureSampler, input.albedoTexCoord);
+            return albedoTexture * albedoColor;
         }
         return albedoColor;
     }

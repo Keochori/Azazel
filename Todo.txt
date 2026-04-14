@@ -26,6 +26,8 @@
 - Fix jpg textures being darker
 - Check how submeshes with different materials are supposed to be loaded in
 
+- Premake doesnt overwrite assets when copying into resource in /bin
+
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
 - Check if its worth separating World View Projection into multiple buffers
 - Why is fps halved when alt+enter mode(windowed fullscreen)
