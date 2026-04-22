@@ -7,6 +7,12 @@
 
 struct Material
 {
+
+	std::shared_ptr<Texture> myAlbedoTexture;
+	Color myAlbedoColor;
+
+	Sampler mySampler;
+
 	Material(const Sampler& aSampler) 
 	{
 		mySampler = aSampler;
@@ -21,9 +27,4 @@ struct Material
 	{
 		myAlbedoColor = Color(aR, aG, aB);
 	}
-
-	std::shared_ptr<Texture> myAlbedoTexture;
-	Color myAlbedoColor;
-
-	Sampler mySampler;
 };

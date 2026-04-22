@@ -2,6 +2,11 @@
 
 struct Color
 {
+	int myR;
+	int myG;
+	int myB;
+	int myA;
+
 	Color()
 	{
 		myR = 255;
@@ -25,9 +30,4 @@ struct Color
 		myB = std::clamp(aB, 0, 255);
 		myA = 255;
 	}
-
-	int myR;
-	int myG;
-	int myB;
-	int myA;
 };

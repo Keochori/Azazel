@@ -3,6 +3,6 @@
 
 struct Texture
 {
-	Texture(DirectX::ScratchImage aImage) : mySRV(std::move(aImage)) {}
 	SRV mySRV;
+	Texture(DirectX::ScratchImage aImage) : mySRV(std::move(aImage)) {}
 };
