@@ -262,7 +262,7 @@ std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(std::string aAnim
 {
     Assimp::Importer importer;
 
-    const aiScene* scene = importer.ReadFile("resources/models/" + aAnimationName, aiProcess_ConvertToLeftHanded);
+    const aiScene* scene = importer.ReadFile("resources/animations/" + aAnimationName, aiProcess_ConvertToLeftHanded);
 
     if (nullptr == scene)
     {
