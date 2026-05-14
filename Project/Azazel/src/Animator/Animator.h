@@ -27,15 +27,15 @@ struct Animation
 	double myCurrentTimeInSeconds = 0.0;
 	double myDurationInSeconds = 0.0;
 	KeyIndexData myKeyIndexData;
-	std::shared_ptr<Skeleton> mySkeleton;
-	std::shared_ptr<AnimationData> myAnimationData;
+	const Skeleton& mySkeleton;
+	const AnimationData& myAnimationData;
 	std::vector<DirectX::XMMATRIX> myFinalBoneMatrices;
 
-	Animation(std::shared_ptr<Skeleton> aSkeleton, std::shared_ptr<AnimationData> aAnimationData) 
+	Animation(const Skeleton& aSkeleton, const AnimationData& aAnimationData) 
 		: mySkeleton(aSkeleton), myAnimationData(aAnimationData)
 	{
-		myDurationInSeconds = aAnimationData->myDurationInTicks / aAnimationData->myTicksPerSecond;
-		myFinalBoneMatrices.resize(aSkeleton->myBoneDataMap.size());
+		myDurationInSeconds = aAnimationData.myDurationInTicks / aAnimationData.myTicksPerSecond;
+		myFinalBoneMatrices.resize(aSkeleton.myBoneDataMap.size());
 		for (int i = 0; i < myFinalBoneMatrices.size(); i++)
 			myFinalBoneMatrices[i] = DirectX::XMMatrixIdentity();
 	}

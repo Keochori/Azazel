@@ -13,8 +13,8 @@ void Animator::Update()
 
 		if (animation.myCurrentTimeInSeconds < animation.myDurationInSeconds)
 		{
-			double currentTimeInTicks = animation.myCurrentTimeInSeconds * animation.myAnimationData->myTicksPerSecond;
-			TraverseNodeHierarchy(animation.myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), animation);
+			double currentTimeInTicks = animation.myCurrentTimeInSeconds * animation.myAnimationData.myTicksPerSecond;
+			TraverseNodeHierarchy(animation.myAnimationData.myRootNode, DirectX::XMMatrixIdentity(), animation);
 
 			animation.myCurrentTimeInSeconds += TIMER.GetDeltaTime() * animation.mySpeed;
 		}
@@ -28,14 +28,22 @@ void Animator::Update()
 
 std::shared_ptr<Animation> Animator::AddAnimation(std::shared_ptr<Skeleton> aSkeleton, std::shared_ptr<AnimationData> aAnimationData)
 {
-	if (!aSkeleton || !aAnimationData)
+	if (!aSkeleton)
+	{
+		LOG_WARNING("Couldn't add animation. Skeleton doesn't exist.");
 		return nullptr;
+	}
+	if (!aAnimationData)
+	{
+		LOG_WARNING("Couldn't add animation. Animation data doesn't exist.");
+		return nullptr;
+	}
 
-	std::shared_ptr<Animation> animation = std::make_shared<Animation>(aSkeleton, aAnimationData);
+	std::shared_ptr<Animation> animation = std::make_shared<Animation>(*aSkeleton, *aAnimationData);
 
 	// Animate first frame
-	double currentTimeInTicks = animation->myCurrentTimeInSeconds * animation->myAnimationData->myTicksPerSecond;
-	TraverseNodeHierarchy(animation->myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), *animation);
+	double currentTimeInTicks = animation->myCurrentTimeInSeconds * animation->myAnimationData.myTicksPerSecond;
+	TraverseNodeHierarchy(animation->myAnimationData.myRootNode, DirectX::XMMatrixIdentity(), *animation);
 
 	myAnimations.push_back(animation);
 
@@ -56,8 +64,8 @@ void Animator::TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aPa
 		DirectX::XMVECTOR scalingVector = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 
 		KeyIndexData& keyIndexData = aAnimation.myKeyIndexData;
-		double currentTimeInTicks = aAnimation.myCurrentTimeInSeconds * aAnimation.myAnimationData->myTicksPerSecond;
-		std::vector<AnimationChannel>& animationChannels = aAnimation.myAnimationData->myAnimationChannels;
+		double currentTimeInTicks = aAnimation.myCurrentTimeInSeconds * aAnimation.myAnimationData.myTicksPerSecond;
+		const std::vector<AnimationChannel>& animationChannels = aAnimation.myAnimationData.myAnimationChannels;
 
 		CalculateLerpedValue(positionVector, keyIndexData.myCurrentPositionKeyIndex, currentTimeInTicks, animationChannels[channelIndex].myPositionKeys, false);
 		CalculateLerpedValue(rotationVector, keyIndexData.myCurrentRotationKeyIndex, currentTimeInTicks, animationChannels[channelIndex].myRotationKeys, true);
@@ -72,10 +80,10 @@ void Animator::TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aPa
 	DirectX::XMMATRIX globalTransform = localTransform * aParentTransform;
 
 	// Update final matrix if node is a bone
-	std::unordered_map<std::string, BoneData>& boneDataMap = aAnimation.mySkeleton->myBoneDataMap;
+	const std::unordered_map<std::string, BoneData>& boneDataMap = aAnimation.mySkeleton.myBoneDataMap;
 	if (boneDataMap.contains(aNode->myName))
 	{
-		BoneData& boneData = boneDataMap[aNode->myName];
+		const BoneData& boneData = boneDataMap.at(aNode->myName);
 		aAnimation.myFinalBoneMatrices[boneData.myIndex] = DirectX::XMMatrixTranspose(boneData.myOffsetMatrix * globalTransform);
 	}
 
