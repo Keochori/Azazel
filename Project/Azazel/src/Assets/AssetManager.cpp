@@ -5,6 +5,8 @@
 #include <assimp/postprocess.h>
 #include "ModelData.h"
 #include "TextureData.h"
+#include "SkinningData.h"
+#include "AnimationData.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
 const std::shared_ptr<Material>& AssetManager::CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice)
@@ -37,7 +39,7 @@ const std::shared_ptr<Model>& AssetManager::GetModel(std::string aModelName, Com
             return nullptr;
         }
 
-        std::shared_ptr<Model> model = std::make_shared<Model>(modelData->myVertices, modelData->myIndices);
+        std::shared_ptr<Model> model = std::make_shared<Model>(modelData->myVertices, modelData->myIndices, modelData->mySkeleton);
         model->myVertexBuffer.Create(aDevice);
         model->myIndexBuffer.Create(aDevice);
         myModelRegistry.emplace(aModelName, model);
@@ -65,6 +67,24 @@ const std::shared_ptr<Texture>& AssetManager::GetTexture(std::string aTextureNam
     }
 
     return myTextureRegistry.at(aTextureName);
+}
+
+const std::shared_ptr<AnimationData>& AssetManager::GetAnimation(std::string aAnimationName)
+{
+    if (!myAnimationRegistry.contains(aAnimationName))
+    {
+        std::shared_ptr<AnimationData> animationData = LoadAnimationData(aAnimationName);
+        if (!animationData)
+        {
+            LOG_WARNING("Unsuccessful attempt to load '" + aAnimationName + "' animation.");
+            return nullptr;
+        }
+
+        myAnimationRegistry.emplace(aAnimationName, animationData);
+        LOG_SUCCESS("Successfully loaded '" + aAnimationName + "' animation.");
+    }
+
+    return myAnimationRegistry.at(aAnimationName);
 }
 
 const std::shared_ptr<Material>& AssetManager::GetMaterial(std::string aMaterialName)
@@ -96,34 +116,131 @@ std::shared_ptr<ModelData> AssetManager::LoadModelData(std::string aModelName)
     }
 
     std::shared_ptr<ModelData> modelData = std::make_shared<ModelData>();
+    std::unordered_map<std::string, BoneData> boneDataMap;
     // Loop through every sub-mesh
     for (int m = 0; m < scene->mNumMeshes; m++)
     {
-        auto& currentMesh = scene->mMeshes[m];
+        auto& mesh = scene->mMeshes[m];
 
         // Load Indices
-        int indexOffset = modelData->myVertices.size();
-        for (int f = 0; f < currentMesh->mNumFaces; f++)
+        int vertexIndexOffset = modelData->myVertices.size();
+        int boneIndexOffset = boneDataMap.size();
+        for (int f = 0; f < mesh->mNumFaces; f++)
         {
-            auto& face = currentMesh->mFaces[f];
+            auto& face = mesh->mFaces[f];
             for (int i = 0; i < face.mNumIndices; i++)
-                modelData->myIndices.emplace_back(face.mIndices[i] + indexOffset);
+                modelData->myIndices.emplace_back(face.mIndices[i] + vertexIndexOffset);
         }
 
         // Load Vertices & UV
-        for (int v = 0; v < currentMesh->mNumVertices; v++)
+        for (int v = 0; v < mesh->mNumVertices; v++)
         {
-            aiVector3D vertex = currentMesh->mVertices[v];
-            aiVector3D* albedoTexCoords = currentMesh->mTextureCoords[0];
+            aiVector3D vertex = mesh->mVertices[v];
+            aiVector3D* albedoTexCoords = mesh->mTextureCoords[0];
 
             if (albedoTexCoords)
                 modelData->myVertices.emplace_back(vertex.x, vertex.y, vertex.z, albedoTexCoords[v].x, albedoTexCoords[v].y);
             else
                 modelData->myVertices.emplace_back(vertex.x, vertex.y, vertex.z);
         }
+
+        // Load Bone Offset Matrices
+        for (int b = 0; b < mesh->mNumBones; b++)
+        {
+            auto& bone = mesh->mBones[b];
+            boneDataMap.emplace(bone->mName.C_Str(), BoneData(MatrixAIToXM(bone->mOffsetMatrix), b + boneIndexOffset));
+        }
+    }
+
+    // Create Skeleton, Load & Apply Skinning Data
+    if (!boneDataMap.empty())
+    {
+        modelData->mySkeleton = std::make_shared<Skeleton>();
+        modelData->mySkeleton->myBoneDataMap = boneDataMap;
+        auto perVertexSkinningData = LoadSkinningData(scene, modelData->myVertices.size(), modelData->mySkeleton->myBoneDataMap);
+        ApplySkinningData(perVertexSkinningData, modelData->myVertices);
     }
 
     return modelData;
+}
+
+std::vector<std::vector<SkinningData>> AssetManager::LoadSkinningData(const aiScene* aScene, unsigned int aVertexAmount, const std::unordered_map<std::string, BoneData>& aBoneDataMap)
+{
+    std::vector<std::vector<SkinningData>> perVertexSkinningDataList;
+    perVertexSkinningDataList.resize(aVertexAmount);
+    int vertexIndexOffset = 0;
+
+    // Loop through every sub-mesh
+    for (int m = 0; m < aScene->mNumMeshes; m++)
+    {
+        auto& mesh = aScene->mMeshes[m];
+
+        // Loop through every bone
+        for (int b = 0; b < mesh->mNumBones; b++)
+        {
+            auto& bone = mesh->mBones[b];
+
+            // Load Skinning Data
+            for (int w = 0; w < bone->mNumWeights; w++)
+            {
+                auto& weight = bone->mWeights[w];
+
+                SkinningData skinningData;
+                skinningData.myBoneID = aBoneDataMap.at(bone->mName.C_Str()).myIndex;
+                skinningData.myWeight = weight.mWeight;
+                perVertexSkinningDataList[weight.mVertexId + vertexIndexOffset].push_back(skinningData);
+            }
+        }
+        vertexIndexOffset += mesh->mNumVertices;
+    }
+
+    return perVertexSkinningDataList;
+}
+
+void AssetManager::ApplySkinningData(std::vector<std::vector<SkinningData>>& aPerVertexSkinningData, std::vector<Vertex>& aVertexList)
+{
+    for (int v = 0; v < aPerVertexSkinningData.size(); v++)
+    {
+        auto& skinningDataList = aPerVertexSkinningData[v];
+
+        // Sort by weight influence
+        std::sort(skinningDataList.begin(), skinningDataList.end(), [&](const SkinningData& aSD1, const SkinningData& aSD2)
+            { return aSD1.myWeight > aSD2.myWeight; });
+
+        // Clamp size
+        if (skinningDataList.size() > MAX_BONES_PER_VERTEX)
+            skinningDataList.resize(MAX_BONES_PER_VERTEX);
+
+        // Normalize weights
+        float sum = 0.0f;
+        for (auto& skinningData : skinningDataList)
+            sum += skinningData.myWeight;
+        if (sum > 0.0f)
+        {
+            float sumInverse = 1.0f / sum;
+            for (auto& skinningData : skinningDataList)
+                skinningData.myWeight *= sumInverse;
+        }
+
+        // Apply data
+        for (int i = 0; i < skinningDataList.size(); i++)
+        {
+            Vertex& vertex = aVertexList[v];
+            vertex.myBoneIDs[i] = skinningDataList[i].myBoneID;
+            vertex.myWeights[i] = skinningDataList[i].myWeight;
+        }
+    }
+}
+
+DirectX::XMMATRIX AssetManager::MatrixAIToXM(const aiMatrix4x4& aAIMatrix)
+{
+    // Transposed from column major to row major
+    return DirectX::XMMatrixSet(
+        aAIMatrix.a1, aAIMatrix.b1, aAIMatrix.c1, aAIMatrix.d1,
+        aAIMatrix.a2, aAIMatrix.b2, aAIMatrix.c2, aAIMatrix.d2,
+        aAIMatrix.a3, aAIMatrix.b3, aAIMatrix.c3, aAIMatrix.d3,
+        aAIMatrix.a4, aAIMatrix.b4, aAIMatrix.c4, aAIMatrix.d4
+    );
 }
 
 std::shared_ptr<TextureData> AssetManager::LoadTextureData(std::string aTextureName)
@@ -139,4 +256,84 @@ std::shared_ptr<TextureData> AssetManager::LoadTextureData(std::string aTextureN
     textureData->myImage = std::move(image);
 
     return textureData;
+}
+
+std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(std::string aAnimationName)
+{
+    Assimp::Importer importer;
+
+    const aiScene* scene = importer.ReadFile("resources/models/" + aAnimationName, aiProcess_ConvertToLeftHanded);
+
+    if (nullptr == scene)
+    {
+        LOG_ERROR(importer.GetErrorString());
+        return nullptr;
+    }
+
+    if (scene->mNumAnimations == 0)
+    {
+        LOG_ERROR("File doesn't have any animations.");
+        return nullptr;
+    }
+
+    std::shared_ptr<AnimationData> animationData = std::make_shared<AnimationData>();
+
+    // Build Animation Node Hierarchy
+    BuildAnimationNodeHierarchy(scene->mRootNode, nullptr, *animationData);
+
+    // Load Animation Channels
+    auto& animation = scene->mAnimations[0];
+    animationData->myDurationInTicks = animation->mDuration;
+    animationData->myTicksPerSecond = animation->mTicksPerSecond;
+
+    for (int c = 0; c < animation->mNumChannels; c++)
+    {
+        auto& currentChannel = animation->mChannels[c];
+        
+        AnimationChannel animationChannel;
+        animationChannel.myNodeName = currentChannel->mNodeName.C_Str();
+
+        // Position Keys
+        for (int i = 0; i < currentChannel->mNumPositionKeys; i++)
+        {
+            auto& positionKey = currentChannel->mPositionKeys[i];
+            auto& pos = positionKey.mValue;
+            animationChannel.myPositionKeys.emplace_back(positionKey.mTime, DirectX::XMVectorSet(pos.x, pos.y, pos.z, 1.0f));
+        }
+
+        // Rotation Keys
+        for (int i = 0; i < currentChannel->mNumRotationKeys; i++)
+        {
+            auto& rotationKey = currentChannel->mRotationKeys[i];
+            auto& rot = rotationKey.mValue;
+            animationChannel.myRotationKeys.emplace_back(rotationKey.mTime, DirectX::XMVectorSet(rot.x, rot.y, rot.z, rot.w));
+        }
+
+        // Scaling Keys
+        for (int i = 0; i < currentChannel->mNumScalingKeys; i++)
+        {
+            auto& scalingKey = currentChannel->mScalingKeys[i];
+            auto& scale = scalingKey.mValue;
+            animationChannel.myScalingKeys.emplace_back(scalingKey.mTime, DirectX::XMVectorSet(scale.x, scale.y, scale.z, 1.0f));
+        }
+
+        animationData->myAnimationChannels.push_back(animationChannel);
+    }
+
+    return animationData;
+}
+
+void AssetManager::BuildAnimationNodeHierarchy(aiNode* aNode, AnimationNode* aParentAnimationNode, AnimationData& aAnimationData)
+{
+    AnimationNode* animationNode = new AnimationNode;
+    animationNode->myName = aNode->mName.C_Str();
+    animationNode->myLocalTransform = MatrixAIToXM(aNode->mTransformation);
+
+    if (!aParentAnimationNode)
+        aAnimationData.myRootNode = animationNode;
+    else
+        aParentAnimationNode->myChildren.push_back(animationNode);
+
+    for (int c = 0; c < aNode->mNumChildren; c++)
+        BuildAnimationNodeHierarchy(aNode->mChildren[c], animationNode, aAnimationData);
 }

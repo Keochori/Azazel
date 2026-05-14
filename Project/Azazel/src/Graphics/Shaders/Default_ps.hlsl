@@ -29,6 +29,6 @@ float4 main(PS_INPUT input) : SV_TARGET
     else
     {
         // Missing material
-        return float4(1.0, 0.0, 1.0, 1.0);        
+        return float4(1.0, 0.0, 1.0, 1.0);
     }
 }

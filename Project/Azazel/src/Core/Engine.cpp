@@ -6,7 +6,7 @@
 #include "ImGui/ImGuiManager.h"
 #include "Scene/Scene.h"
 #include "Tools/Input.h"
-
+#include "Animator/Animator.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
 
@@ -15,6 +15,7 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	myDX11 = std::make_unique<DX11>(aHWND);
 	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 	myAssetManager = std::make_unique<AssetManager>();
+	myAnimator = std::make_unique<Animator>();
 	myScene = std::make_shared<Scene>();
 	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetTextureSRV(), myScene.get());
 
@@ -40,6 +41,8 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	ModelComponent& cube1ModelComponent = cube1.AddComponent<ModelComponent>();
 	ModelComponent& cube2ModelComponent = cube2.AddComponent<ModelComponent>();
 	ModelComponent& cube3ModelComponent = cube3.AddComponent<ModelComponent>();
+	AnimationComponent& gremlinAnimationComponent = gremlin.AddComponent<AnimationComponent>();
+	AnimationComponent& gremlin2AnimationComponent = gremlin2.AddComponent<AnimationComponent>();
 
 	// Model
 	gremlinModelComponent.myModel = myAssetManager->GetModel("gremlin.fbx", myDX11->GetDevice());
@@ -48,6 +51,18 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	cube1ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
 	cube2ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
 	cube3ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
+
+	// Animation
+	gremlinAnimationComponent.myAnimation = myAnimator->AddAnimation(gremlinModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
+	gremlin2AnimationComponent.myAnimation = myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
+	gremlin2AnimationComponent.myAnimation->mySpeed = 0.2f;
+	//gremlinAnimationComponent.myAnimation = myAssetManager->GetAnimation("gremlin@run.fbx");
+	//gremlin2AnimationComponent.myAnimation = myAssetManager->GetAnimation("gremlin@run.fbx");
+	//myAnimator->AddAnimation(gremlinModelComponent.myModel->mySkeleton, gremlinAnimationComponent.myAnimation,
+	//	gremlinAnimationComponent.myFinalBoneMatrices);
+	//myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, gremlin2AnimationComponent.myAnimation,
+	//	gremlin2AnimationComponent.myFinalBoneMatrices);
+
 
 	// Material
 	gremlinModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
@@ -152,5 +167,6 @@ void Engine::OnTextureResize(ImVec2 aSize)
 void Engine::UpdateAndRenderGame()
 {
 	myScene->Update();
+	myAnimator->Update();
 	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
 }

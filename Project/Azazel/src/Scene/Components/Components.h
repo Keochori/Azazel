@@ -4,6 +4,7 @@
 
 struct Model;
 struct Material;
+struct Animation;
 
 struct TransformComponent
 {
@@ -14,4 +15,9 @@ struct ModelComponent
 {
 	std::shared_ptr<Model> myModel;
 	std::shared_ptr<Material> myMaterial;
+};
+
+struct AnimationComponent
+{
+	std::shared_ptr<Animation> myAnimation;
 };

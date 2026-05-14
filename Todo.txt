@@ -29,6 +29,8 @@
 - Move struct constructs to bottom instead of top
 - Premake doesnt overwrite assets when copying into resource in /bin
 
+- Remove shared ptr reference in asset manager, can lead to nullptr reference
+
 - How does binding multiple buffers work? (inputassembler with VertexBuffers)
 - Check if its worth separating World View Projection into multiple buffers
 - Why is fps halved when alt+enter mode(windowed fullscreen)

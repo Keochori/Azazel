@@ -28,6 +28,8 @@ project "Azazel"
         "{COPYDIR} ../Assets/Models %{cfg.targetdir}/resources/models",
         "{MKDIR} %{cfg.targetdir}/resources/textures",
         "{COPYDIR} ../Assets/Textures %{cfg.targetdir}/resources/textures",
+        "{MKDIR} %{cfg.targetdir}/resources/animations",
+        "{COPYDIR} ../Assets/Animations %{cfg.targetdir}/resources/animations",
         "{COPYFILE} %[" .. AssimpDLL .. "] %{cfg.targetdir}",
     }
 

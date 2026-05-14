@@ -6,18 +6,25 @@
 #include "Graphics/Diagnostics/DXASSERT.h"
 
 Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, float aAspectRatio) :
-	myWVPBuffer(eBindType::VS, WVPBuffer(XMMatrixIdentity())),
-	myMaterialBuffer(eBindType::PS, MaterialBuffer(false, false, XMFLOAT4(0, 0, 0, 0))),
+	myWVPBuffer(eBindType::VS, 0u, WVPBuffer(XMMatrixIdentity())),
+	myMaterialBuffer(eBindType::PS, 0u, MaterialBuffer(false, false, XMFLOAT4(0, 0, 0, 0))),
+	myBoneBuffer(eBindType::VS, 1u, BoneBuffer(false, std::vector<DirectX::XMMATRIX>())),
 	myDefaultSampler(Sampler()),
 	myInputLayout({ 
-		{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"ALBEDOTEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0} })
+			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+			{"ALBEDOTEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+			{"BONEIDS",0,DXGI_FORMAT_R32G32B32A32_UINT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0},
+			{"BONEWEIGHTS",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,D3D11_INPUT_PER_VERTEX_DATA,0}
+		})
 {
 	myWVPBuffer.Create(aDevice);
 	myWVPBuffer.Bind(aContext);
 
 	myMaterialBuffer.Create(aDevice);
 	myMaterialBuffer.Bind(aContext);
+
+	myBoneBuffer.Create(aDevice);
+	myBoneBuffer.Bind(aContext);
 
 	myDefaultSampler.Create(aDevice);
 	myDefaultSampler.Bind(aContext);
@@ -28,17 +35,18 @@ Renderer::Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& a
 	myAspectRatio = aAspectRatio;
 }
 
-void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderData)
+void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderDataList)
 {
-	for (RenderData renderData : aRenderData)
+	for (RenderData renderData : aRenderDataList)
 	{
 		if (!renderData.myModel)
 			continue;
 
+		// Bind Vertex & Index Buffer
 		renderData.myModel->myVertexBuffer.Bind(aContext);
 		renderData.myModel->myIndexBuffer.Bind(aContext);
 
-		// Update material data
+		// Update MaterialBuffer
 		int hasMaterial = false;
 		int hasAlbedoTexture = false;
 		if (renderData.myMaterial)
@@ -84,6 +92,12 @@ void Renderer::Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aVie
 					perspectiveMatrix
 				)
 			});
+
+		// Update BoneBuffer
+		if (!renderData.myFinalBoneMatrices.empty())
+			myBoneBuffer.UpdateData(aContext, BoneBuffer(true, renderData.myFinalBoneMatrices));
+		else
+			myBoneBuffer.UpdateData(aContext, BoneBuffer(false, std::vector<DirectX::XMMATRIX>()));
 
 		// Draw
 		DXASSERT(aContext->DrawIndexed((UINT)renderData.myModel->myIndexBuffer.GetIndices().size(), 0u, 0u));

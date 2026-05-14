@@ -14,13 +14,14 @@ public:
 	Renderer(ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, float aAspectRatio);
 	~Renderer() = default;
 
-	void Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderData);
+	void Render(ComPtr<ID3D11DeviceContext>& aContext, const XMMATRIX aViewMatrix, const std::vector<RenderData>& aRenderDataList);
 	void SetAspectRatio(float aAspect);
 
 private:
 	float myAspectRatio;
 	ConstantBuffer<WVPBuffer> myWVPBuffer;
 	ConstantBuffer<MaterialBuffer> myMaterialBuffer;
+	ConstantBuffer<BoneBuffer> myBoneBuffer;
 	Sampler myDefaultSampler;
 	InputLayout myInputLayout;
 };

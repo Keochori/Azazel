@@ -4,6 +4,7 @@
 #include "Components/Components.h"
 #include "Camera/EditorCamera.h"
 #include "Graphics/RenderData.h"
+#include "Animator/Animator.h"
 
 Scene::Scene()
 {
@@ -46,18 +47,31 @@ entt::registry& Scene::GetRegistry()
 
 const std::vector<RenderData>& Scene::GetRenderData()
 {
-	myRenderData.clear();
+	myRenderDataList.clear();
 
-	auto view = myRegistry.view<TransformComponent, ModelComponent>();
-	for (auto entity : view)
+	auto viewModels = myRegistry.view<TransformComponent, ModelComponent>(entt::exclude<AnimationComponent>);
+	for (auto entity : viewModels)
 	{
-		TransformComponent& transformComponent = view.get<TransformComponent>(entity);
-		ModelComponent& modelComponent = view.get<ModelComponent>(entity);
+		TransformComponent& transformComponent = viewModels.get<TransformComponent>(entity);
+		ModelComponent& modelComponent = viewModels.get<ModelComponent>(entity);
 
-		myRenderData.emplace_back(transformComponent.myTransform, modelComponent.myModel, modelComponent.myMaterial);
+		myRenderDataList.emplace_back(transformComponent.myTransform, modelComponent.myModel, modelComponent.myMaterial, std::vector<DirectX::XMMATRIX>());
 	}
 
-	return myRenderData;
+	auto viewAnimatedModels = myRegistry.view<TransformComponent, ModelComponent, AnimationComponent>();
+	for (auto entity : viewAnimatedModels)
+	{
+		TransformComponent& transformComponent = viewAnimatedModels.get<TransformComponent>(entity);
+		ModelComponent& modelComponent = viewAnimatedModels.get<ModelComponent>(entity);
+		AnimationComponent& animationComponent = viewAnimatedModels.get<AnimationComponent>(entity);
+
+		std::vector<DirectX::XMMATRIX> finalBoneMatrices;
+		if (animationComponent.myAnimation)
+			finalBoneMatrices = animationComponent.myAnimation->myFinalBoneMatrices;
+		myRenderDataList.emplace_back(transformComponent.myTransform, modelComponent.myModel, modelComponent.myMaterial, finalBoneMatrices);
+	}
+
+	return myRenderDataList;
 }
 
 const XMMATRIX& Scene::GetEditorCameraViewMatrix()

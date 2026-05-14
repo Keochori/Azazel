@@ -6,6 +6,7 @@ class DX11;
 class Renderer;
 class ImGuiManager;
 class AssetManager;
+class Animator;
 class Scene;
 
 class Engine
@@ -24,6 +25,7 @@ private:
 	std::unique_ptr<Renderer> myRenderer;
 	std::unique_ptr<ImGuiManager> myImGuiManager;
 	std::unique_ptr<AssetManager> myAssetManager;
+	std::unique_ptr<Animator> myAnimator;
 	std::shared_ptr<Scene> myScene;
 
 	ImVec2 myCurrentSceneTabSize;

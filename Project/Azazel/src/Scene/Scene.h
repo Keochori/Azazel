@@ -26,6 +26,6 @@ private:
 	std::vector<Entity> myEntities;
 	std::unique_ptr<EditorCamera> myEditorCamera;
 
-	std::vector<RenderData> myRenderData;
+	std::vector<RenderData> myRenderDataList;
 };
 

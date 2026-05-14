@@ -1,31 +1,34 @@
 #pragma once
 
+#define MAX_BONES_PER_VERTEX 4 // When changing this number, apply changes to input assembly and vertex shader accordingly
+
 struct Vertex
 {
-	Vertex(float aX, float aY, float aZ)
-	{
-		x = aX;
-		y = aY;
-		z = aZ;
-
-		u = 0;
-		v = 0;
-	}
+	Vertex(float aX, float aY, float aZ) : Vertex(aX, aY, aZ, 0.0f, 0.0f) {}
 
 	Vertex(float aX, float aY, float aZ, float aU, float aV)
 	{
-		x = aX;
-		y = aY;
-		z = aZ;
+		myX = aX;
+		myY = aY;
+		myZ = aZ;
 
-		u = aU;
-		v = aV;
+		myU = aU;
+		myV = aV;
+
+		for (int i = 0; i < MAX_BONES_PER_VERTEX; i++)
+		{
+			myBoneIDs[i] = 0u;
+			myWeights[i] = 0.0f;
+		}
 	}
 
-	float x;
-	float y;
-	float z;
+	float myX;
+	float myY;
+	float myZ;
 
-	float u;
-	float v;
+	float myU;
+	float myV;
+
+	unsigned int myBoneIDs[MAX_BONES_PER_VERTEX];
+	float myWeights[MAX_BONES_PER_VERTEX];
 };

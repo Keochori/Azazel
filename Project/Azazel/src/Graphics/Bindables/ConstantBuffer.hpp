@@ -14,7 +14,7 @@ template<typename T>
 class ConstantBuffer : public IBindable<ID3D11Buffer>
 {
 public:
-	ConstantBuffer(const eBindType& aBindType, const T& aData);
+	ConstantBuffer(const eBindType& aBindType, unsigned int aBindSlot, const T& aData);
 	void Create(ComPtr<ID3D11Device>& aDevice) override;
 	void Bind(ComPtr<ID3D11DeviceContext>& aContext) override;
 	void UpdateData(ComPtr<ID3D11DeviceContext>& aContext, const T& aData);
@@ -23,12 +23,14 @@ public:
 
 private:
 	T myData;
+	unsigned int myBindSlot;
 	const eBindType myBindType;
 	ComPtr<ID3D11Buffer> myBuffer;
 };
 
 template <typename T>
-inline ConstantBuffer<T>::ConstantBuffer(const eBindType& aBindType, const T& aData) : myData(aData), myBindType(aBindType) {}
+inline ConstantBuffer<T>::ConstantBuffer(const eBindType& aBindType, unsigned int aBindSlot, const T& aData)
+	: myData(aData), myBindSlot(aBindSlot), myBindType(aBindType) {}
 
 template <typename T>
 inline void ConstantBuffer<T>::Create(ComPtr<ID3D11Device>& aDevice)
@@ -54,16 +56,16 @@ inline void ConstantBuffer<T>::Bind(ComPtr<ID3D11DeviceContext>& aContext)
 	switch (myBindType)
 	{
 		case eBindType::VS:
-			DXASSERT(aContext->VSSetConstantBuffers(0u, 1u, myBuffer.GetAddressOf()));
+			DXASSERT(aContext->VSSetConstantBuffers(myBindSlot, 1u, myBuffer.GetAddressOf()));
 			break;
 
 		case eBindType::PS:
-			DXASSERT(aContext->PSSetConstantBuffers(0u, 1u, myBuffer.GetAddressOf()));
+			DXASSERT(aContext->PSSetConstantBuffers(myBindSlot, 1u, myBuffer.GetAddressOf()));
 			break;
 
 		case eBindType::VSandPS:
-			DXASSERT(aContext->VSSetConstantBuffers(0u, 1u, myBuffer.GetAddressOf()));
-			DXASSERT(aContext->PSSetConstantBuffers(0u, 1u, myBuffer.GetAddressOf()));
+			DXASSERT(aContext->VSSetConstantBuffers(myBindSlot, 1u, myBuffer.GetAddressOf()));
+			DXASSERT(aContext->PSSetConstantBuffers(myBindSlot, 1u, myBuffer.GetAddressOf()));
 			break;
 	}
 }
