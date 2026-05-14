@@ -9,6 +9,6 @@ struct Model
 	IndexBuffer myIndexBuffer;
 	std::shared_ptr<Skeleton> mySkeleton;
 
-	Model(const std::vector<Vertex>& aVertices, const std::vector<unsigned short>& aIndices, const std::shared_ptr<Skeleton>& aSkeleton)
+	Model(const std::vector<Vertex>& aVertices, const std::vector<unsigned short>& aIndices, std::shared_ptr<Skeleton> aSkeleton)
 		: myVertexBuffer(aVertices), myIndexBuffer(aIndices), mySkeleton(aSkeleton) {}
 };

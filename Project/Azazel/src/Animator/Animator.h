@@ -31,7 +31,7 @@ struct Animation
 	std::shared_ptr<AnimationData> myAnimationData;
 	std::vector<DirectX::XMMATRIX> myFinalBoneMatrices;
 
-	Animation(const std::shared_ptr<Skeleton>& aSkeleton, const std::shared_ptr<AnimationData>& aAnimationData) 
+	Animation(std::shared_ptr<Skeleton> aSkeleton, std::shared_ptr<AnimationData> aAnimationData) 
 		: mySkeleton(aSkeleton), myAnimationData(aAnimationData)
 	{
 		myDurationInSeconds = aAnimationData->myDurationInTicks / aAnimationData->myTicksPerSecond;
@@ -48,7 +48,7 @@ public:
 	~Animator() = default;
 
 	void Update();
-	std::shared_ptr<Animation> AddAnimation(const std::shared_ptr<Skeleton>& aSkeleton, const std::shared_ptr<AnimationData>& aAnimationData);
+	std::shared_ptr<Animation> AddAnimation(std::shared_ptr<Skeleton> aSkeleton, std::shared_ptr<AnimationData> aAnimationData);
 
 private:
 	void TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aParentTransform, Animation& aAnimation);

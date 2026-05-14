@@ -9,7 +9,7 @@
 #include "AnimationData.h"
 #include "Graphics/Diagnostics/DXASSERT.h"
 
-const std::shared_ptr<Material>& AssetManager::CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice)
+std::shared_ptr<Material> AssetManager::CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice)
 {
     if (!myMaterialRegistry.contains(aMaterialName))
     {
@@ -28,7 +28,7 @@ const std::shared_ptr<Material>& AssetManager::CreateMaterial(const std::string&
     }
 }
 
-const std::shared_ptr<Model>& AssetManager::GetModel(std::string aModelName, ComPtr<ID3D11Device>& aDevice)
+std::shared_ptr<Model> AssetManager::GetModel(std::string aModelName, ComPtr<ID3D11Device>& aDevice)
 {
 	if (!myModelRegistry.contains(aModelName))
 	{
@@ -49,7 +49,7 @@ const std::shared_ptr<Model>& AssetManager::GetModel(std::string aModelName, Com
 	return myModelRegistry.at(aModelName);
 }
 
-const std::shared_ptr<Texture>& AssetManager::GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice)
+std::shared_ptr<Texture> AssetManager::GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice)
 {
     if (!myTextureRegistry.contains(aTextureName))
     {
@@ -69,7 +69,7 @@ const std::shared_ptr<Texture>& AssetManager::GetTexture(std::string aTextureNam
     return myTextureRegistry.at(aTextureName);
 }
 
-const std::shared_ptr<AnimationData>& AssetManager::GetAnimation(std::string aAnimationName)
+std::shared_ptr<AnimationData> AssetManager::GetAnimation(std::string aAnimationName)
 {
     if (!myAnimationRegistry.contains(aAnimationName))
     {
@@ -87,7 +87,7 @@ const std::shared_ptr<AnimationData>& AssetManager::GetAnimation(std::string aAn
     return myAnimationRegistry.at(aAnimationName);
 }
 
-const std::shared_ptr<Material>& AssetManager::GetMaterial(std::string aMaterialName)
+std::shared_ptr<Material> AssetManager::GetMaterial(std::string aMaterialName)
 {
     if (!myMaterialRegistry.contains(aMaterialName)) 
     {

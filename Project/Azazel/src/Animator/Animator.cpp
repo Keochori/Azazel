@@ -24,11 +24,13 @@ void Animator::Update()
 			animation.myKeyIndexData.Reset();
 		}
 	}
-
 }
 
-std::shared_ptr<Animation> Animator::AddAnimation(const std::shared_ptr<Skeleton>& aSkeleton, const std::shared_ptr<AnimationData>& aAnimationData)
+std::shared_ptr<Animation> Animator::AddAnimation(std::shared_ptr<Skeleton> aSkeleton, std::shared_ptr<AnimationData> aAnimationData)
 {
+	if (!aSkeleton || !aAnimationData)
+		return nullptr;
+
 	std::shared_ptr<Animation> animation = std::make_shared<Animation>(aSkeleton, aAnimationData);
 
 	// Animate first frame

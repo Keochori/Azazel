@@ -22,12 +22,12 @@ public:
 	AssetManager() = default;
 	~AssetManager() = default;
 
-	const std::shared_ptr<Material>& CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice);
+	std::shared_ptr<Material> CreateMaterial(const std::string& aMaterialName, ComPtr<ID3D11Device>& aDevice);
 
-	const std::shared_ptr<Model>& GetModel(std::string aModelName, ComPtr<ID3D11Device>& aDevice);
-	const std::shared_ptr<Texture>& GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice);
-	const std::shared_ptr<AnimationData>& GetAnimation(std::string aAnimationName);
-	const std::shared_ptr<Material>& GetMaterial(std::string aMaterialName);
+	std::shared_ptr<Model> GetModel(std::string aModelName, ComPtr<ID3D11Device>& aDevice);
+	std::shared_ptr<Texture> GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice);
+	std::shared_ptr<AnimationData> GetAnimation(std::string aAnimationName);
+	std::shared_ptr<Material> GetMaterial(std::string aMaterialName);
 
 private:
 	std::shared_ptr<ModelData> LoadModelData(std::string aModelName);

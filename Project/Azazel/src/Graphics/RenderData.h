@@ -12,7 +12,7 @@ struct RenderData
 	std::shared_ptr<Material> myMaterial;
 	const std::vector<DirectX::XMMATRIX> myFinalBoneMatrices;
 
-	RenderData(const Transform& aTransform, const std::shared_ptr<Model>& aModel, const std::shared_ptr<Material>& aMaterial,
+	RenderData(const Transform& aTransform, std::shared_ptr<Model> aModel, std::shared_ptr<Material> aMaterial,
 		const std::vector<DirectX::XMMATRIX> aFinalBoneMatrices) :
 		myTransform(aTransform), myModel(aModel), myMaterial(aMaterial), myFinalBoneMatrices(aFinalBoneMatrices) {}
 };

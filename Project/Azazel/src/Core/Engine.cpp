@@ -56,12 +56,6 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	gremlinAnimationComponent.myAnimation = myAnimator->AddAnimation(gremlinModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
 	gremlin2AnimationComponent.myAnimation = myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
 	gremlin2AnimationComponent.myAnimation->mySpeed = 0.2f;
-	//gremlinAnimationComponent.myAnimation = myAssetManager->GetAnimation("gremlin@run.fbx");
-	//gremlin2AnimationComponent.myAnimation = myAssetManager->GetAnimation("gremlin@run.fbx");
-	//myAnimator->AddAnimation(gremlinModelComponent.myModel->mySkeleton, gremlinAnimationComponent.myAnimation,
-	//	gremlinAnimationComponent.myFinalBoneMatrices);
-	//myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, gremlin2AnimationComponent.myAnimation,
-	//	gremlin2AnimationComponent.myFinalBoneMatrices);
 
 	// Material
 	gremlinModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
