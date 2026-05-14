@@ -28,7 +28,7 @@ std::shared_ptr<Material> AssetManager::CreateMaterial(const std::string& aMater
     }
 }
 
-std::shared_ptr<Model> AssetManager::GetModel(std::string aModelName, ComPtr<ID3D11Device>& aDevice)
+std::shared_ptr<Model> AssetManager::GetModel(const std::string& aModelName, ComPtr<ID3D11Device>& aDevice)
 {
 	if (!myModelRegistry.contains(aModelName))
 	{
@@ -49,7 +49,7 @@ std::shared_ptr<Model> AssetManager::GetModel(std::string aModelName, ComPtr<ID3
 	return myModelRegistry.at(aModelName);
 }
 
-std::shared_ptr<Texture> AssetManager::GetTexture(std::string aTextureName, ComPtr<ID3D11Device>& aDevice)
+std::shared_ptr<Texture> AssetManager::GetTexture(const std::string& aTextureName, ComPtr<ID3D11Device>& aDevice)
 {
     if (!myTextureRegistry.contains(aTextureName))
     {
@@ -69,7 +69,7 @@ std::shared_ptr<Texture> AssetManager::GetTexture(std::string aTextureName, ComP
     return myTextureRegistry.at(aTextureName);
 }
 
-std::shared_ptr<AnimationData> AssetManager::GetAnimation(std::string aAnimationName)
+std::shared_ptr<AnimationData> AssetManager::GetAnimation(const std::string& aAnimationName)
 {
     if (!myAnimationRegistry.contains(aAnimationName))
     {
@@ -87,7 +87,7 @@ std::shared_ptr<AnimationData> AssetManager::GetAnimation(std::string aAnimation
     return myAnimationRegistry.at(aAnimationName);
 }
 
-std::shared_ptr<Material> AssetManager::GetMaterial(std::string aMaterialName)
+std::shared_ptr<Material> AssetManager::GetMaterial(const std::string& aMaterialName)
 {
     if (!myMaterialRegistry.contains(aMaterialName)) 
     {
@@ -98,7 +98,7 @@ std::shared_ptr<Material> AssetManager::GetMaterial(std::string aMaterialName)
     return myMaterialRegistry.at(aMaterialName);
 }
 
-std::shared_ptr<ModelData> AssetManager::LoadModelData(std::string aModelName)
+std::shared_ptr<ModelData> AssetManager::LoadModelData(const std::string& aModelName)
 {
     Assimp::Importer importer;
 
@@ -243,7 +243,7 @@ DirectX::XMMATRIX AssetManager::MatrixAIToXM(const aiMatrix4x4& aAIMatrix)
     );
 }
 
-std::shared_ptr<TextureData> AssetManager::LoadTextureData(std::string aTextureName)
+std::shared_ptr<TextureData> AssetManager::LoadTextureData(const std::string& aTextureName)
 {
     DirectX::ScratchImage image = DirectX::ScratchImage{};
     std::string texturePath = "resources/textures/" + aTextureName;
@@ -258,7 +258,7 @@ std::shared_ptr<TextureData> AssetManager::LoadTextureData(std::string aTextureN
     return textureData;
 }
 
-std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(std::string aAnimationName)
+std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(const std::string& aAnimationName)
 {
     Assimp::Importer importer;
 
