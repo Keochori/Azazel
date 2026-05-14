@@ -14,13 +14,15 @@ void Animator::Update()
 		if (animation.myCurrentTimeInSeconds < animation.myDurationInSeconds)
 		{
 			double currentTimeInTicks = animation.myCurrentTimeInSeconds * animation.myAnimationData->myTicksPerSecond;
-			TraverseNodeHierarchy(animation.myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), currentTimeInTicks,
-				*animation.mySkeleton, animation.myAnimationData->myAnimationChannels, animation.myFinalBoneMatrices);
+			TraverseNodeHierarchy(animation.myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), animation);
 
 			animation.myCurrentTimeInSeconds += TIMER.GetDeltaTime() * animation.mySpeed;
 		}
 		else if (animation.myLooping)
+		{
 			animation.myCurrentTimeInSeconds = 0.0;
+			animation.myKeyIndexData.Reset();
+		}
 	}
 
 }
@@ -31,34 +33,33 @@ std::shared_ptr<Animation> Animator::AddAnimation(const std::shared_ptr<Skeleton
 
 	// Animate first frame
 	double currentTimeInTicks = animation->myCurrentTimeInSeconds * animation->myAnimationData->myTicksPerSecond;
-	TraverseNodeHierarchy(animation->myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), currentTimeInTicks,
-		*animation->mySkeleton, animation->myAnimationData->myAnimationChannels, animation->myFinalBoneMatrices);
+	TraverseNodeHierarchy(animation->myAnimationData->myRootNode, DirectX::XMMatrixIdentity(), *animation);
 
 	myAnimations.push_back(animation);
 
 	return animation;
 }
 
-void Animator::TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aParentTransform, double aCurrentTimeInTicks, const Skeleton& aSkeleton, const std::vector<AnimationChannel>& aAnimationChannels, std::vector<DirectX::XMMATRIX>& aFinalBoneMatrices)
+void Animator::TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aParentTransform, Animation& aAnimation)
 {
 	DirectX::XMMATRIX localTransform = aNode->myLocalTransform;
 
-	// Check if node is animated
-	int channelIndex = -1;
-	for (int i = 0; i < aAnimationChannels.size(); i++)
-		if (aAnimationChannels[i].myNodeName == aNode->myName)
-			channelIndex = i;
-
 	// Calculate animated transform
-	if (channelIndex != -1)
+	if (aNode->myIsAnimated)
 	{
+		unsigned int channelIndex = aNode->myChannelIndex;
+
 		DirectX::XMVECTOR positionVector = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 		DirectX::XMVECTOR rotationVector = DirectX::XMQuaternionIdentity();
 		DirectX::XMVECTOR scalingVector = DirectX::XMVectorSet(1.0f, 1.0f, 1.0f, 1.0f);
 
-		CalculateLerpedValue(positionVector, aCurrentTimeInTicks, aAnimationChannels[channelIndex].myPositionKeys, false);
-		CalculateLerpedValue(rotationVector, aCurrentTimeInTicks, aAnimationChannels[channelIndex].myRotationKeys, true);
-		CalculateLerpedValue(scalingVector, aCurrentTimeInTicks, aAnimationChannels[channelIndex].myScalingKeys, false);
+		KeyIndexData& keyIndexData = aAnimation.myKeyIndexData;
+		double currentTimeInTicks = aAnimation.myCurrentTimeInSeconds * aAnimation.myAnimationData->myTicksPerSecond;
+		std::vector<AnimationChannel>& animationChannels = aAnimation.myAnimationData->myAnimationChannels;
+
+		CalculateLerpedValue(positionVector, keyIndexData.myCurrentPositionKeyIndex, currentTimeInTicks, animationChannels[channelIndex].myPositionKeys, false);
+		CalculateLerpedValue(rotationVector, keyIndexData.myCurrentRotationKeyIndex, currentTimeInTicks, animationChannels[channelIndex].myRotationKeys, true);
+		CalculateLerpedValue(scalingVector, keyIndexData.myCurrentScalingKeyIndex, currentTimeInTicks, animationChannels[channelIndex].myScalingKeys, false);
 
 		localTransform =
 			DirectX::XMMatrixScalingFromVector(scalingVector) *
@@ -69,49 +70,43 @@ void Animator::TraverseNodeHierarchy(AnimationNode* aNode, DirectX::XMMATRIX aPa
 	DirectX::XMMATRIX globalTransform = localTransform * aParentTransform;
 
 	// Update final matrix if node is a bone
-	std::unordered_map<std::string, BoneData> boneDataMap = aSkeleton.myBoneDataMap;
+	std::unordered_map<std::string, BoneData>& boneDataMap = aAnimation.mySkeleton->myBoneDataMap;
 	if (boneDataMap.contains(aNode->myName))
 	{
 		BoneData& boneData = boneDataMap[aNode->myName];
-		aFinalBoneMatrices[boneData.myIndex] = DirectX::XMMatrixTranspose(boneData.myOffsetMatrix * globalTransform);
+		aAnimation.myFinalBoneMatrices[boneData.myIndex] = DirectX::XMMatrixTranspose(boneData.myOffsetMatrix * globalTransform);
 	}
 
 	// Continue traversing hierarchy
 	for (int c = 0; c < aNode->myChildren.size(); c++)
-		TraverseNodeHierarchy(aNode->myChildren[c], globalTransform, aCurrentTimeInTicks, aSkeleton, aAnimationChannels, aFinalBoneMatrices);
+		TraverseNodeHierarchy(aNode->myChildren[c], globalTransform, aAnimation);
 }
 
-void Animator::CalculateLerpedValue(DirectX::XMVECTOR& aVector, double aCurrentTimeInTicks, const std::vector<KeyFrame>& aKeyFrames, bool aQuaternion)
+void Animator::CalculateLerpedValue(DirectX::XMVECTOR& aVector, unsigned int& aCurrentFrameIndex, double aCurrentTimeInTicks, const std::vector<KeyFrame>& aKeyFrames, bool aQuaternion)
 {
 	if (!aKeyFrames.empty())
 	{
-		// Search for current KeyFrame
-		for (int i = 0; i < aKeyFrames.size(); i++)
+		if (aCurrentFrameIndex + 1 >= aKeyFrames.size())
 		{
-			// If last or only keyframe, apply its' value
-			if (i == aKeyFrames.size() - 1)
-			{
-				aVector = aKeyFrames[aKeyFrames.size() - 1].myValue;
-				return;
-			}
-
-			double currentFrameTime = aKeyFrames[i].myTime;
-			double nextFrameTime = aKeyFrames[i + 1].myTime;
-
-			// If current KeyFrame, calculate lerped value
-			if (aCurrentTimeInTicks >= currentFrameTime && aCurrentTimeInTicks < nextFrameTime)
-			{
-				double alpha = 0.0;
-				if (currentFrameTime != nextFrameTime)
-					alpha = (aCurrentTimeInTicks - currentFrameTime) / (nextFrameTime - currentFrameTime);
-				alpha = (double)std::clamp((float)alpha, 0.0f, 1.0f);
-
-				if (aQuaternion)
-					aVector = DirectX::XMQuaternionNormalize(DirectX::XMQuaternionSlerp(aKeyFrames[i].myValue, aKeyFrames[i + 1].myValue, alpha));
-				else
-					aVector = DirectX::XMVectorLerp(aKeyFrames[i].myValue, aKeyFrames[i + 1].myValue, alpha);
-				return;
-			}
+			aVector = aKeyFrames[aKeyFrames.size() - 1].myValue;
+			return;
 		}
+
+		if (aCurrentTimeInTicks >= aKeyFrames[aCurrentFrameIndex + 1].myTime)
+			aCurrentFrameIndex += 1;
+
+		double currentFrameTime = aKeyFrames[aCurrentFrameIndex].myTime;
+		double nextFrameTime = aKeyFrames[aCurrentFrameIndex + 1].myTime;
+
+		double alpha = 0.0;
+		if (currentFrameTime != nextFrameTime)
+			alpha = (aCurrentTimeInTicks - currentFrameTime) / (nextFrameTime - currentFrameTime);
+		alpha = (double)std::clamp((float)alpha, 0.0f, 1.0f);
+
+		if (aQuaternion)
+			aVector = DirectX::XMQuaternionNormalize(DirectX::XMQuaternionSlerp(aKeyFrames[aCurrentFrameIndex].myValue, aKeyFrames[aCurrentFrameIndex + 1].myValue, alpha));
+		else
+			aVector = DirectX::XMVectorLerp(aKeyFrames[aCurrentFrameIndex].myValue, aKeyFrames[aCurrentFrameIndex + 1].myValue, alpha);
+		return;
 	}
 }

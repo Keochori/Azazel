@@ -23,6 +23,8 @@ struct AnimationNode
 {
 	std::string myName;
 
+	bool myIsAnimated = false;
+	unsigned int myChannelIndex = 0;
 	DirectX::XMMATRIX myLocalTransform;
 	std::vector<AnimationNode*> myChildren;
 };

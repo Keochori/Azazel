@@ -63,7 +63,6 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	//myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, gremlin2AnimationComponent.myAnimation,
 	//	gremlin2AnimationComponent.myFinalBoneMatrices);
 
-
 	// Material
 	gremlinModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
 	gremlinModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("gremlin.png", myDX11->GetDevice());

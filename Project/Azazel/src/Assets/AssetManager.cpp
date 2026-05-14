@@ -278,9 +278,6 @@ std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(std::string aAnim
 
     std::shared_ptr<AnimationData> animationData = std::make_shared<AnimationData>();
 
-    // Build Animation Node Hierarchy
-    BuildAnimationNodeHierarchy(scene->mRootNode, nullptr, *animationData);
-
     // Load Animation Channels
     auto& animation = scene->mAnimations[0];
     animationData->myDurationInTicks = animation->mDuration;
@@ -320,6 +317,9 @@ std::shared_ptr<AnimationData> AssetManager::LoadAnimationData(std::string aAnim
         animationData->myAnimationChannels.push_back(animationChannel);
     }
 
+    // Build Animation Node Hierarchy
+    BuildAnimationNodeHierarchy(scene->mRootNode, nullptr, *animationData);
+
     return animationData;
 }
 
@@ -329,6 +329,17 @@ void AssetManager::BuildAnimationNodeHierarchy(aiNode* aNode, AnimationNode* aPa
     animationNode->myName = aNode->mName.C_Str();
     animationNode->myLocalTransform = MatrixAIToXM(aNode->mTransformation);
 
+    // Check if node is animated
+    std::vector<AnimationChannel>& animationChannels = aAnimationData.myAnimationChannels;
+    for (int i = 0; i < animationChannels.size(); i++)
+    {
+        if (animationChannels[i].myNodeName == animationNode->myName)
+        {
+            animationNode->myIsAnimated = true;
+            animationNode->myChannelIndex = i;
+        }
+    }
+            
     if (!aParentAnimationNode)
         aAnimationData.myRootNode = animationNode;
     else
