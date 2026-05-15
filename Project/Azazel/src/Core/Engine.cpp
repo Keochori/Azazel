@@ -27,6 +27,7 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	Entity cube1 = myScene->CreateEntity("cube1");
 	Entity cube2 = myScene->CreateEntity("cube2");
 	Entity cube3 = myScene->CreateEntity("cube3");
+	Entity bot = myScene->CreateEntity("bot");
 
 	// Fetch and add components
 	Transform& gremlinTransform = gremlin.GetComponent<TransformComponent>().myTransform;
@@ -35,14 +36,17 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	Transform& cube1Transform = cube1.GetComponent<TransformComponent>().myTransform;
 	Transform& cube2Transform = cube2.GetComponent<TransformComponent>().myTransform;
 	Transform& cube3Transform = cube3.GetComponent<TransformComponent>().myTransform;
+	Transform& botTransform = bot.GetComponent<TransformComponent>().myTransform;
 	ModelComponent& gremlinModelComponent = gremlin.AddComponent<ModelComponent>();
 	ModelComponent& gremlin2ModelComponent = gremlin2.AddComponent<ModelComponent>();
 	ModelComponent& chestModelComponent = chest.AddComponent<ModelComponent>();
 	ModelComponent& cube1ModelComponent = cube1.AddComponent<ModelComponent>();
 	ModelComponent& cube2ModelComponent = cube2.AddComponent<ModelComponent>();
 	ModelComponent& cube3ModelComponent = cube3.AddComponent<ModelComponent>();
+	ModelComponent& botModelComponent = bot.AddComponent<ModelComponent>();
 	AnimationComponent& gremlinAnimationComponent = gremlin.AddComponent<AnimationComponent>();
 	AnimationComponent& gremlin2AnimationComponent = gremlin2.AddComponent<AnimationComponent>();
+	AnimationComponent& botAnimationComponent = bot.AddComponent<AnimationComponent>();
 
 	// Model
 	gremlinModelComponent.myModel = myAssetManager->GetModel("gremlin.fbx", myDX11->GetDevice());
@@ -51,11 +55,13 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	cube1ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
 	cube2ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
 	cube3ModelComponent.myModel = myAssetManager->GetModel("cube.fbx", myDX11->GetDevice());
+	botModelComponent.myModel = myAssetManager->GetModel("bot.fbx", myDX11->GetDevice());
 
 	// Animation
 	gremlinAnimationComponent.myAnimation = myAnimator->AddAnimation(gremlinModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
 	gremlin2AnimationComponent.myAnimation = myAnimator->AddAnimation(gremlin2ModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("gremlin@run.fbx"));
 	gremlin2AnimationComponent.myAnimation->mySpeed = 0.2f;
+	botAnimationComponent.myAnimation = myAnimator->AddAnimation(botModelComponent.myModel->mySkeleton, myAssetManager->GetAnimation("bot@idle.fbx"));
 
 	// Material
 	gremlinModelComponent.myMaterial = myAssetManager->CreateMaterial("gremlin", myDX11->GetDevice());
@@ -68,6 +74,7 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	cube1ModelComponent.myMaterial = myAssetManager->CreateMaterial("cube1", myDX11->GetDevice());
 	cube1ModelComponent.myMaterial->myAlbedoTexture = myAssetManager->GetTexture("cloth.png", myDX11->GetDevice());
 	cube2ModelComponent.myMaterial = myAssetManager->CreateMaterial("cube2", myDX11->GetDevice());
+	botModelComponent.myMaterial = myAssetManager->CreateMaterial("bot", myDX11->GetDevice());
 
 	// Transform
 	gremlinTransform.myScale = { 0.05f,0.05f,0.05f };
@@ -79,6 +86,8 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	cube1Transform.myPosition = { 3.0f, -0.5f, 4.0f };
 	cube2Transform.myPosition = { 3.0f, -0.5f, 6.5f };
 	cube3Transform.myPosition = { 3.0f, -0.5f, 9.0f };
+	botTransform.myPosition = { -2.5f, -1.5f, 8.0f };
+	botTransform.myScale = { 0.025f,0.025f,0.025f };
 }
 
 Engine::~Engine()
