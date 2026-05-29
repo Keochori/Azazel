@@ -35,6 +35,8 @@
 - Check if its worth separating World View Projection into multiple buffers
 - Why is fps halved when alt+enter mode(windowed fullscreen)
 
+- Change default variable initialization into .h instead of constructor when it isn't changed by the constructor arguments.
+
 // Repeated checks
 - = default on all constructors
 - check const& returns and arguments

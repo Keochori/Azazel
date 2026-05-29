@@ -17,7 +17,14 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	myAssetManager = std::make_unique<AssetManager>();
 	myAnimator = std::make_unique<Animator>();
 	myScene = std::make_shared<Scene>();
-	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetTextureSRV(), myScene.get());
+
+	std::unordered_map<std::string, ID3D11ShaderResourceView*> icons;
+	icons.emplace("folder_closed", myAssetManager->GetTexture("folder_closed.png", myDX11->GetDevice())->mySRV.Get());
+	icons.emplace("folder_open", myAssetManager->GetTexture("folder_open.png", myDX11->GetDevice())->mySRV.Get());
+	icons.emplace("folder_empty", myAssetManager->GetTexture("folder_empty.png", myDX11->GetDevice())->mySRV.Get());
+	icons.emplace("arrow_right", myAssetManager->GetTexture("arrow_right.png", myDX11->GetDevice())->mySRV.Get());
+	icons.emplace("arrow_down", myAssetManager->GetTexture("arrow_down.png", myDX11->GetDevice())->mySRV.Get());
+	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetTextureSRV(), icons, myScene.get());
 
 	// Create entities
 	Entity empty = myScene->CreateEntity("empty");

@@ -1,9 +1,12 @@
 #pragma once
 #include "ImGui/imguiIncludes.h"
-#include <d3d11.h>
-#include <wrl.h> 
-#include <functional>
+#include "Tabs/FileExplorerTab.h"
 #include "entt/entt.hpp"
+#include <filesystem>
+#include <functional>
+#include <d3d11.h>
+#include <memory>
+#include <wrl.h> 
 
 // [HOW TO REGISTER A COMPONENT TO BE DRAWN]:
 // 1. Forward declare the component type
@@ -23,7 +26,7 @@ class ImGuiManager
 {
 public:
 	ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext, 
-		ComPtr<ID3D11ShaderResourceView>& aTextureSRV, Scene* aScene);
+		ComPtr<ID3D11ShaderResourceView>& aTextureSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene);
 	~ImGuiManager() = default;
 
 	void NewFrame();
@@ -36,7 +39,6 @@ public:
 	void SceneTab();
 	void HierarchyTab();
 	void InspectorTab();
-	void AssetsTab();
 	void ConsoleTab();
 
 	// Component draw logic
@@ -55,7 +57,9 @@ private:
 	int myCurrentFPS = 0;
 
 	Scene* myScene;
-	Entity* mySelectedEntity;
+	Entity* mySelectedEntity = nullptr;
+
+	FileExplorerTab myFileExplorerTab;
 
 	std::vector<std::function<void(entt::registry&, const entt::entity&)>> myComponentsToDraw;
 };

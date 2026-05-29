@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "ImGuiManager.h"
 #include "Tools/Timer.h"
 #include "Scene/Scene.h"
@@ -6,10 +6,8 @@
 #include "Scene/Components/Components.h"
 
 ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext,
-	ComPtr<ID3D11ShaderResourceView>& aTextureSRV, Scene* aScene) : myTextureSRV(aTextureSRV), myScene(aScene)
+	ComPtr<ID3D11ShaderResourceView>& aTextureSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene) : myTextureSRV(aTextureSRV), myFileExplorerTab(aIcons), myScene(aScene)
 {
-	mySelectedEntity = nullptr;
-
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -44,7 +42,7 @@ void ImGuiManager::Update()
 	SceneTab();
 	HierarchyTab();
 	InspectorTab();
-	AssetsTab();
+	myFileExplorerTab.Update();
 	ConsoleTab();
 }
 
@@ -65,31 +63,21 @@ void ImGuiManager::MainMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			//if (ImGui::MenuItem("Open")) 
-			//{ 
-
-			//}
-			//if (ImGui::MenuItem("Save")) 
-			//{
-
-			//}
-			//ImGui::Separator();
-			//if (ImGui::MenuItem("Exit")) 
-			//{
-
-			//}
-
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View"))
 		{
-			//if (ImGui::MenuItem("Scene Fullscreen", "F"))
-			//{
-			//	
-			//}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Window"))
+		{
+			if (ImGui::MenuItem("File Explorer"))
+				myFileExplorerTab.OpenTab();
 
 			ImGui::EndMenu();
 		}
+
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -114,7 +102,7 @@ void ImGuiManager::SceneTab()
 {
 	ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoCollapse);
 	mySceneTabSize = ImGui::GetContentRegionAvail();
-	ImGui::Image((void*)myTextureSRV.Get(), mySceneTabSize);
+	ImGui::Image((ImTextureID)myTextureSRV.Get(), mySceneTabSize);
 	ImGui::End();
 }
 
@@ -159,13 +147,6 @@ void ImGuiManager::InspectorTab()
 	ImGui::End();
 }
 
-void ImGuiManager::AssetsTab()
-{
-	ImGui::Begin("Asets", nullptr, ImGuiWindowFlags_NoCollapse);
-
-	ImGui::End();
-}
-
 void ImGuiManager::ConsoleTab()
 {
 	ImGui::Begin("Console", nullptr, ImGuiWindowFlags_NoCollapse);
@@ -182,3 +163,4 @@ void ImGuiManager::DrawComponentUI(ModelComponent& aModelComponent)
 {
 	
 }
+
