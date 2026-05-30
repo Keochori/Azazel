@@ -6,7 +6,8 @@
 #include "Scene/Components/Components.h"
 
 ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext,
-	ComPtr<ID3D11ShaderResourceView>& aTextureSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene) : myTextureSRV(aTextureSRV), myFileExplorerTab(aIcons), myScene(aScene)
+	ComPtr<ID3D11ShaderResourceView>& aSceneSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene)
+	: mySceneTab(aSceneSRV), myHierarchyTab(aScene), myInspectorTab(aScene), myFileExplorerTab(aIcons)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -19,10 +20,6 @@ ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID
 	// Setup Platform/Renderer backends
 	ImGui_ImplWin32_Init(aHWND);
 	ImGui_ImplDX11_Init(aDevice.Get(), aContext.Get());
-
-	// Register components to draw
-	RegisterComponentToDraw<TransformComponent>("Transform");
-	RegisterComponentToDraw<ModelComponent>("Model");
 }
 
 void ImGuiManager::NewFrame()
@@ -39,11 +36,11 @@ void ImGuiManager::Update()
 {
 	//ImGui::ShowDemoWindow();
     FPSCounterTab();
-	SceneTab();
-	HierarchyTab();
-	InspectorTab();
+	mySceneTab.Update();
+	myConsoleTab.Update();
+	myHierarchyTab.Update();
+	myInspectorTab.Update(myHierarchyTab.GetSelectedEntity());
 	myFileExplorerTab.Update();
-	ConsoleTab();
 }
 
 void ImGuiManager::Render()
@@ -54,7 +51,7 @@ void ImGuiManager::Render()
 
 const ImVec2& ImGuiManager::GetSceneTabSize()
 {
-	return mySceneTabSize;
+	return mySceneTab.GetSceneTabSize();
 }
 
 void ImGuiManager::MainMenuBar()
@@ -74,6 +71,18 @@ void ImGuiManager::MainMenuBar()
 		{
 			if (ImGui::MenuItem("File Explorer"))
 				myFileExplorerTab.OpenTab();
+
+			if (ImGui::MenuItem("Console"))
+				myConsoleTab.OpenTab();
+
+			if (ImGui::MenuItem("Hierarchy"))
+				myHierarchyTab.OpenTab();
+
+			if (ImGui::MenuItem("Inspector"))
+				myInspectorTab.OpenTab();
+
+			if (ImGui::MenuItem("Scene"))
+				mySceneTab.OpenTab();
 
 			ImGui::EndMenu();
 		}
@@ -96,71 +105,5 @@ void ImGuiManager::FPSCounterTab()
     }
     ImGui::Text("FPS: %i", myCurrentFPS);
     ImGui::End();
-}
-
-void ImGuiManager::SceneTab()
-{
-	ImGui::Begin("Scene", nullptr, ImGuiWindowFlags_NoCollapse);
-	mySceneTabSize = ImGui::GetContentRegionAvail();
-	ImGui::Image((ImTextureID)myTextureSRV.Get(), mySceneTabSize);
-	ImGui::End();
-}
-
-void ImGuiManager::HierarchyTab()
-{
-	ImGui::Begin("Hierarchy", nullptr, ImGuiWindowFlags_NoCollapse);
-
-	bool anyItemHovered = false;
-
-	for (Entity& entity : myScene->GetEntities())
-	{
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf;
-		bool isSelected = (mySelectedEntity == &entity); 
-		
-		if (isSelected)
-			flags |= ImGuiTreeNodeFlags_Selected;
-
-		if (ImGui::TreeNodeEx(entity.GetName().c_str(), flags))
-			ImGui::TreePop();
-
-		if (ImGui::IsItemClicked())
-			mySelectedEntity = &entity;
-
-		if (ImGui::IsItemHovered())
-			anyItemHovered = true;
-	}
-
-	if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !anyItemHovered)
-		mySelectedEntity = nullptr;
-
-    ImGui::End();
-}
-
-void ImGuiManager::InspectorTab()
-{
-	ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoCollapse);
-
-	if (mySelectedEntity != nullptr)
-		for (auto& drawFn : myComponentsToDraw)
-			drawFn(myScene->GetRegistry(), mySelectedEntity->GetHandle());
-
-	ImGui::End();
-}
-
-void ImGuiManager::ConsoleTab()
-{
-	ImGui::Begin("Console", nullptr, ImGuiWindowFlags_NoCollapse);
-
-	ImGui::End();
-}
-
-void ImGuiManager::DrawComponentUI(TransformComponent& aTransformComponent)
-{
-	ImGui::DragFloat3("Position", &aTransformComponent.myTransform.myPosition.x, 0.1f);
-}
-
-void ImGuiManager::DrawComponentUI(ModelComponent& aModelComponent)
-{
-	
 }
 
