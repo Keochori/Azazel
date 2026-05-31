@@ -27,9 +27,6 @@ public:
 	void FPSCounterTab();
 
 private:
-	int myFrameCounter = 0;
-	int myCurrentFPS = 0;
-
 	SceneTab mySceneTab;
 	ConsoleTab myConsoleTab;
 	HierarchyTab myHierarchyTab;

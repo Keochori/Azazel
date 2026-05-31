@@ -93,17 +93,20 @@ void ImGuiManager::MainMenuBar()
 
 void ImGuiManager::FPSCounterTab()
 {
+	static int frameCounter = 0;
+	static int currentFPS = 0;
+
     ImGui::Begin("FPS", nullptr, ImGuiWindowFlags_NoCollapse);
-    myFrameCounter++;
-    if (myFrameCounter > 30)
+	frameCounter++;
+    if (frameCounter > 30)
     {
-        myFrameCounter = 0;
+		frameCounter = 0;
         float fps = 1.0f / TIMER.GetDeltaTime();
 
         float alpha = 0.25f; // lower = smoother
-        myCurrentFPS = myCurrentFPS * (1.0f - alpha) + fps * alpha;
+		currentFPS = currentFPS * (1.0f - alpha) + fps * alpha;
     }
-    ImGui::Text("FPS: %i", myCurrentFPS);
+    ImGui::Text("FPS: %i", currentFPS);
     ImGui::End();
 }
 

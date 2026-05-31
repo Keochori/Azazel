@@ -26,10 +26,12 @@ public:
 private:
 	void PanelSplitter();
 	void UpdatePendingMove();
-	void DrawCustomDirectoryNode(const std::filesystem::path& aPath, const char* aLabel, float aMargin);
 	bool HasDirectories(const std::filesystem::path& aPath);
-	void DragDropDirectoryNode(const std::filesystem::path& aPath);
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
+
+	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
+	void DragDropDirectoryNode(const std::filesystem::path& aPath);
+	void DrawCustomDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
 
 	bool myTabOpen = true;
@@ -39,6 +41,7 @@ private:
 	std::optional<PendingMove> myPendingMove;
 
 	float myLeftPanelWidth = 250.0f;
+	float myLeftPanelFocused = false;
 	ID3D11ShaderResourceView* myFolderIcon_Closed;
 	ID3D11ShaderResourceView* myFolderIcon_Open;
 	ID3D11ShaderResourceView* myFolderIcon_Empty;

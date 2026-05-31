@@ -21,6 +21,7 @@ void FileExplorerTab::Update()
 
 		// Left Panel (Directory Tree)
 		ImGui::BeginChild("LeftPanel", ImVec2(myLeftPanelWidth, 0), true);
+		myLeftPanelFocused = ImGui::IsWindowFocused();
 		DrawDirectoryTree(myAssetsPath, 0);
 		ImGui::EndChild();
 
@@ -29,7 +30,7 @@ void FileExplorerTab::Update()
 
 		// Right Panel (File Explorer)
 		ImGui::BeginChild("RightPanel", ImVec2(0, 0), true);
-		for (auto& path : mySelectedPaths)
+		for (const auto& path : mySelectedPaths)
 			ImGui::Text(path.string().c_str());
 		ImGui::EndChild();
 
@@ -84,83 +85,6 @@ void FileExplorerTab::UpdatePendingMove()
 	}
 }
 
-void FileExplorerTab::DrawCustomDirectoryNode(const std::filesystem::path& aPath, const char* aLabel, float aMargin)
-{
-	bool& open = myNodeOpenMap[aPath];
-	bool hasDirectories = HasDirectories(aPath);
-	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
-	if (!hasDirectories)
-		folderIcon = (ImTextureID)myFolderIcon_Empty;
-	ImTextureID arrowIcon = open ? (ImTextureID)myArrowIcon_Down : (ImTextureID)myArrowIcon_Right;
-	std::string buttonLabel = std::string(aLabel) + "_arrowButton";
-
-	ImGui::PushID(aLabel);
-
-	// Margin
-	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + aMargin * 16.0f);
-
-	// Draw button
-	if (hasDirectories)
-	{
-		ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
-		ImGui::PushStyleColor(ImGuiCol_Button, transparent);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, transparent);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, transparent);
-
-		if (ImGui::ImageButton(buttonLabel.c_str(), arrowIcon, ImVec2(9,9))) 
-			open = !open;
-
-		ImGui::PopStyleColor(3);
-		ImGui::SameLine();
-	}
-	else
-	{
-		// Create dummy for margin/padding if no button
-		ImGui::Dummy(ImVec2(ImGui::GetFrameHeight() - 2, 0));
-		ImGui::SameLine();
-	}
-
-	// Draw icon
-	ImGui::Image(folderIcon, ImVec2(13, 13));
-	ImGui::SameLine();
-
-	// Node
-	bool windowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-	bool selected = false;
-	for (auto& path : mySelectedPaths)
-		if (path == aPath)
-		{
-			selected = true;
-			break;
-		}
-
-	ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
-	ImVec4 blue(0.26f, 0.59f, 0.98f, 0.31f);
-	ImVec4 gray(0.5f, 0.5f, 0.5f, 0.25f);
-	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? (windowFocused ? blue : gray) : transparent);
-	if (!windowFocused)
-		ImGui::PushStyleColor(ImGuiCol_Header, gray);
-
-	if (ImGui::Selectable(aLabel, selected, ImGuiSelectableFlags_SpanAllColumns))
-		if (ImGui::GetIO().KeyCtrl)
-			mySelectedPaths.insert(aPath);
-		else
-		{
-			mySelectedPaths.clear();
-			mySelectedPaths.insert(aPath);
-		}
-
-	if (!windowFocused)
-		ImGui::PopStyleColor(2);
-	else
-		ImGui::PopStyleColor(1);
-
-	// Drag Drop Logic
-	DragDropDirectoryNode(aPath);
-
-	ImGui::PopID();
-}
-
 bool FileExplorerTab::HasDirectories(const std::filesystem::path& aPath)
 {
 	for (const auto& entry : std::filesystem::directory_iterator(aPath))
@@ -168,6 +92,66 @@ bool FileExplorerTab::HasDirectories(const std::filesystem::path& aPath)
 			return true;
 
 	return false;
+}
+
+bool FileExplorerTab::IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination)
+{
+	std::filesystem::path sourceAbsolute = std::filesystem::weakly_canonical(aSource);
+	std::filesystem::path destinationAbsolute = std::filesystem::weakly_canonical(aDestination);
+
+	std::pair<std::filesystem::path::iterator, std::filesystem::path::iterator> mismatch =
+		std::mismatch(sourceAbsolute.begin(), sourceAbsolute.end(), destinationAbsolute.begin(), destinationAbsolute.end());
+
+	return mismatch.first == sourceAbsolute.end();
+}
+
+void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
+{
+	bool selected = false;
+	for (const auto& path : mySelectedPaths)
+	{
+		if (path == aPath)
+		{
+			selected = true;
+			break;
+		}
+	}
+
+	ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
+	ImVec4 blue(0.26f, 0.59f, 0.98f, 0.31f);
+	ImVec4 gray(0.5f, 0.5f, 0.5f, 0.25f);
+
+	// Node color
+	bool windowFocused = myLeftPanelFocused;
+	ImGui::PushStyleColor(ImGuiCol_HeaderActive, blue);
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? (windowFocused ? blue : gray) : transparent);
+	if (!windowFocused)
+		ImGui::PushStyleColor(ImGuiCol_Header, gray);
+
+	// Node
+	ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns);
+	if (ImGui::IsItemClicked())
+	{
+		if (ImGui::GetIO().KeyCtrl)
+		{
+			mySelectedPaths.insert(aPath);
+
+			// Open parent directory of every selected path
+			for (const auto& path : mySelectedPaths)
+				myNodeOpenMap[path.parent_path()] = true;
+		}
+		else
+		{
+			mySelectedPaths.clear();
+			mySelectedPaths.insert(aPath);
+		}
+	}
+
+	// Pop ImGui style colors
+	if (!windowFocused)
+		ImGui::PopStyleColor(3);
+	else
+		ImGui::PopStyleColor(2);
 }
 
 void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
@@ -203,24 +187,61 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 		ImGui::EndDragDropTarget();
 	}
 }
-
-bool FileExplorerTab::IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination)
+ 
+void FileExplorerTab::DrawCustomDirectoryNode(const std::filesystem::path& aPath, float aMargin)
 {
-	std::filesystem::path sourceAbsolute = std::filesystem::weakly_canonical(aSource);
-	std::filesystem::path destinationAbsolute = std::filesystem::weakly_canonical(aDestination);
+	std::string label = aPath.filename().string();
+	bool& open = myNodeOpenMap[aPath];
+	bool hasDirectories = HasDirectories(aPath);
 
-	std::pair<std::filesystem::path::iterator, std::filesystem::path::iterator> mismatch =
-		std::mismatch(sourceAbsolute.begin(), sourceAbsolute.end(), destinationAbsolute.begin(), destinationAbsolute.end());
+	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
+	if (!hasDirectories)
+		folderIcon = (ImTextureID)myFolderIcon_Empty;
+	ImTextureID arrowIcon = open ? (ImTextureID)myArrowIcon_Down : (ImTextureID)myArrowIcon_Right;
 
-	return mismatch.first == sourceAbsolute.end();
+	ImGui::PushID(label.c_str());
+
+	// Margin
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + aMargin * 16.0f);
+
+	// Draw open/close button
+	if (hasDirectories)
+	{
+		ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
+		ImGui::PushStyleColor(ImGuiCol_Button, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, transparent);
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, transparent);
+
+		std::string buttonLabel = std::string(label) + "_arrowButton";
+		if (ImGui::ImageButton(buttonLabel.c_str(), arrowIcon, ImVec2(9, 9)))
+			open = !open;
+
+		ImGui::PopStyleColor(3);
+		ImGui::SameLine();
+	}
+	else
+	{
+		// Create dummy for margin/padding if no button
+		ImGui::Dummy(ImVec2(ImGui::GetFrameHeight() - 2, 0));
+		ImGui::SameLine();
+	}
+
+	// Draw folder icon
+	ImGui::Image(folderIcon, ImVec2(13, 13));
+	ImGui::SameLine();
+
+	// Node
+	NodeLogic(aPath, label);
+
+	// Drag Drop Logic
+	DragDropDirectoryNode(aPath);
+
+	ImGui::PopID();
 }
 
 void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin)
 {
-	std::string label = aPath.filename().string();
-	bool selected = false;
-
-	DrawCustomDirectoryNode(aPath, label.c_str(), aMargin);
+	DrawCustomDirectoryNode(aPath, aMargin);
 
 	if (myNodeOpenMap[aPath])
 		for (const auto& entry : std::filesystem::directory_iterator(aPath))
