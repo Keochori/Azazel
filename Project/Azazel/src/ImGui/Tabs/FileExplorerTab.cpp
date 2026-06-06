@@ -5,6 +5,7 @@
 FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons)
 {
 	mySelectedPaths.insert("Assets");
+	myLatestSelectedPath = "Assets";
 
 	myFolderIcon_Closed = aIcons.at("folder_closed");
 	myFolderIcon_Open = aIcons.at("folder_open");
@@ -32,6 +33,9 @@ void FileExplorerTab::Update()
 		ImGui::BeginChild("RightPanel", ImVec2(0, 0), true);
 		for (const auto& path : mySelectedPaths)
 			ImGui::Text(path.string().c_str());
+		ImGui::Text("Latest: ");
+		ImGui::SameLine();
+		ImGui::Text(myLatestSelectedPath.string().c_str());
 		ImGui::EndChild();
 
 		// Check for Pending Move
@@ -132,7 +136,18 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 	ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns);
 	if (ImGui::IsItemClicked())
 	{
-		if (ImGui::GetIO().KeyCtrl)
+		// Shift-Click
+		if (ImGui::GetIO().KeyShift)
+		{
+			if (myLatestSelectedPath != aPath)
+			{
+				bool inRange = false;
+				
+				ShiftSelectDirectory(aPath, myAssetsPath, inRange);
+			}
+		}
+		// Ctrl-Click
+		else if (ImGui::GetIO().KeyCtrl)
 		{
 			mySelectedPaths.insert(aPath);
 
@@ -140,11 +155,14 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 			for (const auto& path : mySelectedPaths)
 				myNodeOpenMap[path.parent_path()] = true;
 		}
+		// Left-Click
 		else
 		{
 			mySelectedPaths.clear();
 			mySelectedPaths.insert(aPath);
 		}
+
+		myLatestSelectedPath = aPath;
 	}
 
 	// Pop ImGui style colors
@@ -152,6 +170,33 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		ImGui::PopStyleColor(3);
 	else
 		ImGui::PopStyleColor(2);
+}
+
+bool FileExplorerTab::ShiftSelectDirectory(const std::filesystem::path& aClickedPath, const std::filesystem::path& aCurrentPath, bool& aInRange)
+{
+	for (const auto& entry : std::filesystem::directory_iterator(aCurrentPath))
+	{
+		if (entry.is_directory())
+		{
+			if (entry.path() == myLatestSelectedPath || entry.path() == aClickedPath)
+			{
+				if (aInRange)
+				{
+					mySelectedPaths.insert(aClickedPath);
+					return false;
+				}
+				else
+					aInRange = true;
+			} 
+			else if (aInRange)
+			{
+				mySelectedPaths.insert(entry.path());
+			}
+
+			if (!ShiftSelectDirectory(aClickedPath, entry.path(), aInRange))
+				return false;
+		}
+	}
 }
 
 void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
@@ -246,5 +291,5 @@ void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int 
 	if (myNodeOpenMap[aPath])
 		for (const auto& entry : std::filesystem::directory_iterator(aPath))
 			if (entry.is_directory())
-				DrawDirectoryTree(entry, aMargin + 1.8f);
+				DrawDirectoryTree(entry.path(), aMargin + 1.8f);
 }

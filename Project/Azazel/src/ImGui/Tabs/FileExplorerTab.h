@@ -30,6 +30,7 @@ private:
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
 
 	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
+	bool ShiftSelectDirectory(const std::filesystem::path& aClickedPath, const std::filesystem::path& aCurrentPath, bool& aInRange);
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
 	void DrawCustomDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
@@ -37,6 +38,7 @@ private:
 	bool myTabOpen = true;
 	std::filesystem::path myAssetsPath = "Assets";
 	std::unordered_set<std::filesystem::path> mySelectedPaths;
+	std::filesystem::path myLatestSelectedPath;
 	std::unordered_map<std::filesystem::path, bool> myNodeOpenMap;
 	std::optional<PendingMove> myPendingMove;
 
