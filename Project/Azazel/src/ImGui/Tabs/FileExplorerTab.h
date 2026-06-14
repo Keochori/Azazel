@@ -24,21 +24,26 @@ public:
 	void OpenTab();
 
 private:
+	void DrawLeftPanel();
+	void DrawRightPanel();
 	void PanelSplitter();
 	void UpdatePendingMove();
+
 	bool HasDirectories(const std::filesystem::path& aPath);
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
 
-	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
-	bool ShiftSelectDirectory(const std::filesystem::path& aClickedPath, const std::filesystem::path& aCurrentPath, bool& aInRange);
+	void BuildVisibleNodeList(const std::filesystem::path& aPath);
+	void ShiftSelectDirectory(const std::filesystem::path& aClickedPath);
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
-	void DrawCustomDirectoryNode(const std::filesystem::path& aPath, float aMargin);
+	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
+	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
 
 	bool myTabOpen = true;
 	std::filesystem::path myAssetsPath = "Assets";
 	std::unordered_set<std::filesystem::path> mySelectedPaths;
-	std::filesystem::path myLatestSelectedPath;
+	std::filesystem::path myAnchorPath;
+	std::vector<std::filesystem::path> myVisibleNodes;
 	std::unordered_map<std::filesystem::path, bool> myNodeOpenMap;
 	std::optional<PendingMove> myPendingMove;
 
