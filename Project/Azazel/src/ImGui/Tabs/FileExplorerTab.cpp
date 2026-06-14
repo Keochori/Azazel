@@ -188,6 +188,16 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 	}
 }
 
+void FileExplorerTab::OpenParentDirectories(const std::filesystem::path& aPath)
+{
+	if (aPath != myAssetsPath)
+	{
+		myNodeOpenMap[aPath.parent_path()] = true;
+
+		OpenParentDirectories(aPath.parent_path());
+	}
+}
+
 void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
 {
 	bool selected = false;
@@ -218,19 +228,23 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		// Shift-Click
 		if (ImGui::GetIO().KeyShift)
 		{
+			OpenParentDirectories(myAnchorPath);
+			myVisibleNodes.clear();
+			BuildVisibleNodeList(myAssetsPath);
 			ShiftSelectDirectory(aPath);
 		}
 		// Ctrl-Click
 		else if (ImGui::GetIO().KeyCtrl)
 		{
+			// Select/Deselect 
 			if (mySelectedPaths.contains(aPath))
 				mySelectedPaths.erase(aPath);
 			else
 				mySelectedPaths.insert(aPath);
 
-			// Open parent directory of every selected path
-			for (const auto& path : mySelectedPaths)
-				myNodeOpenMap[path.parent_path()] = true;
+			// Open all parent directories
+			for (const auto& path : mySelectedPaths) 
+				OpenParentDirectories(path);
 
 			myAnchorPath = aPath;
 		}

@@ -35,6 +35,7 @@ private:
 	void BuildVisibleNodeList(const std::filesystem::path& aPath);
 	void ShiftSelectDirectory(const std::filesystem::path& aClickedPath);
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
+	void OpenParentDirectories(const std::filesystem::path& aPath);
 	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
