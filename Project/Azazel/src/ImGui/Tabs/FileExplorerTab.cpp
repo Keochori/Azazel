@@ -57,7 +57,7 @@ void FileExplorerTab::DrawRightPanel()
 
 	for (const auto& path : mySelectedPaths)
 		ImGui::Text(path.string().c_str());
-	ImGui::Text("Latest: ");
+	ImGui::Text("AnchorPath: ");
 	ImGui::SameLine();
 	ImGui::Text(myAnchorPath.string().c_str());
 
@@ -91,14 +91,22 @@ void FileExplorerTab::UpdatePendingMove()
 {
 	if (myPendingMove.has_value())
 	{
-		const std::filesystem::path& source = myPendingMove->mySource;
-		const std::filesystem::path& destination = myPendingMove->myDestination;
-		std::filesystem::rename(source, destination);
+		const std::vector<std::filesystem::path>& sources = myPendingMove->mySources;
+		for (const auto& source : sources)
+		{
+			const std::filesystem::path destination = myPendingMove->myDestination / source.filename();
+			if (source == destination)
+				continue;
 
-		// Retain open state after move
-		myNodeOpenMap[destination] = myNodeOpenMap[source];
+			// Move
+			std::filesystem::rename(source, destination);
 
-		myNodeOpenMap.erase(source);
+			// Retain same open state after move
+			myNodeOpenMap[destination] = myNodeOpenMap[source];
+
+			myNodeOpenMap.erase(source);
+		}
+
 		myPendingMove.reset();
 	}
 }
@@ -118,9 +126,9 @@ bool FileExplorerTab::IsInsideDirectory(const std::filesystem::path& aSource, co
 	std::filesystem::path destinationAbsolute = std::filesystem::weakly_canonical(aDestination);
 
 	std::pair<std::filesystem::path::iterator, std::filesystem::path::iterator> mismatch =
-		std::mismatch(sourceAbsolute.begin(), sourceAbsolute.end(), destinationAbsolute.begin(), destinationAbsolute.end());
+		std::mismatch(destinationAbsolute.begin(), destinationAbsolute.end(), sourceAbsolute.begin(), sourceAbsolute.end());
 
-	return mismatch.first == sourceAbsolute.end();
+	return mismatch.first == destinationAbsolute.end();
 }
 
 void FileExplorerTab::BuildVisibleNodeList(const std::filesystem::path& aPath)
@@ -167,14 +175,7 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 	// Drag Source
 	if (ImGui::BeginDragDropSource())
 	{
-		ImGui::SetDragDropPayload(
-			"DIRECTORY_NODE_MOVE",
-			aPath.string().c_str(),
-			aPath.string().size() + 1
-		);
-
-		ImGui::Text("%s", aPath.filename().string().c_str());
-
+		ImGui::SetDragDropPayload("DIRECTORY_NODE_MOVE",aPath.string().c_str(), aPath.string().size() + 1);
 		ImGui::EndDragDropSource();
 	}
 
@@ -186,10 +187,39 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 		if (payload)
 		{
 			std::filesystem::path source = static_cast<const char*>(payload->Data);
-			std::filesystem::path destination = aPath / source.filename();
+			std::filesystem::path destination = aPath;
 
-			if (!IsInsideDirectory(source, destination))
-				myPendingMove.emplace(source, destination);
+			bool insideDirectory = false;
+			for (const auto& path : mySelectedPaths)
+			{
+				if (IsInsideDirectory(destination, path))
+				{
+					insideDirectory = true;
+					break;
+				}
+			}
+			if (!insideDirectory)
+			{
+				std::vector<std::filesystem::path> myHighestDirectories;
+				for (const auto& pathToCheck : mySelectedPaths)
+				{
+					bool highestDirectory = true;
+					for (const auto& currentPath : mySelectedPaths)
+					{
+						if (pathToCheck != currentPath)
+						{
+							if (IsInsideDirectory(pathToCheck, currentPath))
+							{
+								highestDirectory = false;
+								break;
+							}
+						}
+					}
+					if (highestDirectory)
+						myHighestDirectories.push_back(pathToCheck);
+				}
+				myPendingMove.emplace(myHighestDirectories, destination);
+			}
 		}
 
 		ImGui::EndDragDropTarget();

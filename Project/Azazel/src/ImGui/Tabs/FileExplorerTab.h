@@ -10,7 +10,7 @@ using Microsoft::WRL::ComPtr;
 
 struct PendingMove
 {
-	std::filesystem::path mySource;
+	std::vector<std::filesystem::path> mySources;
 	std::filesystem::path myDestination;
 };
 
