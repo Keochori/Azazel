@@ -137,10 +137,18 @@ void FileExplorerTab::BuildVisibleNodeList(const std::filesystem::path& aPath)
 	}
 }
 
-void FileExplorerTab::ShiftSelectDirectory(const std::filesystem::path& aClickedPath)
+void FileExplorerTab::LeftClickDirectory(const std::filesystem::path& aPath)
+{
+	mySelectedPaths.clear();
+	mySelectedPaths.insert(aPath);
+	myAnchorPath = aPath;
+	myLeftClickOnRelease = false;
+}
+
+void FileExplorerTab::ShiftSelectDirectory(const std::filesystem::path& aPath)
 {
 	auto anchorIt = std::find(myVisibleNodes.begin(), myVisibleNodes.end(), myAnchorPath);
-	auto clickedIt = std::find(myVisibleNodes.begin(), myVisibleNodes.end(), aClickedPath);
+	auto clickedIt = std::find(myVisibleNodes.begin(), myVisibleNodes.end(), aPath);
 
 	if (anchorIt == myVisibleNodes.end() || clickedIt == myVisibleNodes.end())
 		return;
@@ -222,7 +230,12 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		ImGui::PushStyleColor(ImGuiCol_Header, gray);
 
 	// Node
-	ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns);
+	if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+	{
+		if (myLeftClickOnRelease)
+			LeftClickDirectory(aPath);
+	}
+
 	if (ImGui::IsItemClicked())
 	{
 		// Shift-Click
@@ -251,9 +264,10 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		// Left-Click
 		else
 		{
-			mySelectedPaths.clear();
-			mySelectedPaths.insert(aPath);
-			myAnchorPath = aPath;
+			if (!mySelectedPaths.contains(aPath))
+				LeftClickDirectory(aPath);
+			else
+				myLeftClickOnRelease = true;
 		}
 	}
 

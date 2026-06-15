@@ -33,6 +33,7 @@ private:
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
 
 	void BuildVisibleNodeList(const std::filesystem::path& aPath);
+	void LeftClickDirectory(const std::filesystem::path& aPath);
 	void ShiftSelectDirectory(const std::filesystem::path& aClickedPath);
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
 	void OpenParentDirectories(const std::filesystem::path& aPath);
@@ -41,11 +42,14 @@ private:
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
 
 	bool myTabOpen = true;
+
+	bool myLeftClickOnRelease = false;
 	std::filesystem::path myAssetsPath = "Assets";
-	std::unordered_set<std::filesystem::path> mySelectedPaths;
 	std::filesystem::path myAnchorPath;
 	std::vector<std::filesystem::path> myVisibleNodes;
+	std::unordered_set<std::filesystem::path> mySelectedPaths;
 	std::unordered_map<std::filesystem::path, bool> myNodeOpenMap;
+
 	std::optional<PendingMove> myPendingMove;
 
 	float myLeftPanelWidth = 250.0f;
