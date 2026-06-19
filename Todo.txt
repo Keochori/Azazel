@@ -25,6 +25,7 @@
 - in premake try to copy entire asset folder instead of individual folders to bin
 - Fix jpg textures being darker
 - Check how submeshes with different materials are supposed to be loaded in
+- HRASSERT is in Graphics/Diagnostics but AssetGUID is using it too.
 
 - Move struct constructs to bottom instead of top
 - Premake doesnt overwrite assets when copying into resource in /bin

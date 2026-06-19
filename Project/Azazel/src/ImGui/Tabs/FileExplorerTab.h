@@ -1,5 +1,6 @@
 #pragma once
 #include "ImGui/imguiIncludes.h"
+#include "Assets/AssetGUID.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <filesystem>
@@ -29,6 +30,9 @@ private:
 	void PanelSplitter();
 	void UpdatePendingMove();
 
+	AssetGUID GetFolderGUID(const std::filesystem::path& aPath);
+	void BuildGUIDCache();
+
 	bool HasDirectories(const std::filesystem::path& aPath);
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
 
@@ -39,16 +43,17 @@ private:
 	void OpenParentDirectories(const std::filesystem::path& aPath);
 	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
-	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin);
+	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
 
 	bool myTabOpen = true;
 
 	bool myLeftClickOnRelease = false;
-	std::filesystem::path myAssetsPath = "Assets";
+	std::filesystem::path myRootPath = "Assets";
 	std::filesystem::path myAnchorPath;
 	std::vector<std::filesystem::path> myVisibleNodes;
 	std::unordered_set<std::filesystem::path> mySelectedPaths;
-	std::unordered_map<std::filesystem::path, bool> myNodeOpenMap;
+	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
+	std::unordered_map<AssetGUID, bool> myNodeOpenMap;
 
 	std::optional<PendingMove> myPendingMove;
 

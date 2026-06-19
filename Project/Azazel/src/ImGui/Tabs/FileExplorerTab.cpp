@@ -1,11 +1,13 @@
 ﻿#include "pch.h"
 #include "FileExplorerTab.h"
 #include <algorithm>
+#include <fstream>
 
 FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons)
 {
-	mySelectedPaths.insert("Assets");
-	myAnchorPath = "Assets";
+	mySelectedPaths.insert(myRootPath);
+	myAnchorPath = myRootPath;
+	BuildGUIDCache();
 
 	myFolderIcon_Closed = aIcons.at("folder_closed");
 	myFolderIcon_Open = aIcons.at("folder_open");
@@ -44,9 +46,7 @@ void FileExplorerTab::DrawLeftPanel()
 	ImGui::BeginChild("LeftPanel", ImVec2(myLeftPanelWidth, 0), true);
 
 	myLeftPanelFocused = ImGui::IsWindowFocused();
-	myVisibleNodes.clear();
-	BuildVisibleNodeList(myAssetsPath);
-	DrawDirectoryTree(myAssetsPath, 0);
+	DrawDirectoryTree(myRootPath, 0, 1.8f);
 
 	ImGui::EndChild();
 }
@@ -91,24 +91,59 @@ void FileExplorerTab::UpdatePendingMove()
 {
 	if (myPendingMove.has_value())
 	{
+		mySelectedPaths.clear();
 		const std::vector<std::filesystem::path>& sources = myPendingMove->mySources;
 		for (const auto& source : sources)
 		{
 			const std::filesystem::path destination = myPendingMove->myDestination / source.filename();
-			if (source == destination)
-				continue;
 
 			// Move
 			std::filesystem::rename(source, destination);
 
-			// Retain same open state after move
-			myNodeOpenMap[destination] = myNodeOpenMap[source];
-
-			myNodeOpenMap.erase(source);
+			// Retain selection
+			mySelectedPaths.insert(destination);
 		}
+
+		// Rebuild GUID cache after moving files
+		BuildGUIDCache();
+
+		// Open destination folder after moving
+		myNodeOpenMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
 
 		myPendingMove.reset();
 	}
+}
+
+AssetGUID FileExplorerTab::GetFolderGUID(const std::filesystem::path& aPath)
+{
+	const std::filesystem::path metaPath = aPath / ".foldermeta";
+
+	// Get GUID from file
+	if (std::filesystem::exists(metaPath))
+	{
+		std::ifstream file(metaPath);
+
+		AssetGUID guid;
+		std::getline(file, guid);
+
+		return guid;
+	}
+
+	// Create .foldermeta if not already existing
+	AssetGUID guid = GenerateGUID();
+	std::ofstream file(metaPath);
+	file << guid;
+
+	return guid;
+}
+
+void FileExplorerTab::BuildGUIDCache()
+{
+	myFolderGUIDs[myRootPath] = GetFolderGUID(myRootPath);
+
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(myRootPath))
+		if (entry.is_directory())
+			myFolderGUIDs[entry.path()] = GetFolderGUID(entry.path());
 }
 
 bool FileExplorerTab::HasDirectories(const std::filesystem::path& aPath)
@@ -135,7 +170,7 @@ void FileExplorerTab::BuildVisibleNodeList(const std::filesystem::path& aPath)
 {
 	myVisibleNodes.push_back(aPath);
 
-	if (myNodeOpenMap[aPath])
+	if (myNodeOpenMap[myFolderGUIDs[aPath]])
 	{
 		for (const auto& entry : std::filesystem::directory_iterator(aPath))
 		{
@@ -228,9 +263,9 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 
 void FileExplorerTab::OpenParentDirectories(const std::filesystem::path& aPath)
 {
-	if (aPath != myAssetsPath)
+	if (aPath != myRootPath)
 	{
-		myNodeOpenMap[aPath.parent_path()] = true;
+		myNodeOpenMap[myFolderGUIDs[aPath.parent_path()]] = true;
 
 		OpenParentDirectories(aPath.parent_path());
 	}
@@ -273,7 +308,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		{
 			OpenParentDirectories(myAnchorPath);
 			myVisibleNodes.clear();
-			BuildVisibleNodeList(myAssetsPath);
+			BuildVisibleNodeList(myRootPath);
 			ShiftSelectDirectory(aPath);
 		}
 		// Ctrl-Click
@@ -311,7 +346,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin)
 {
 	std::string label = aPath.filename().string();
-	bool& open = myNodeOpenMap[aPath];
+	bool& open = myNodeOpenMap[myFolderGUIDs[aPath]];
 	bool hasDirectories = HasDirectories(aPath);
 
 	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
@@ -359,12 +394,12 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 	ImGui::PopID();
 }
 
-void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin)
+void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement)
 {
 	DrawDirectoryNode(aPath, aMargin);
 
-	if (myNodeOpenMap[aPath])
+	if (myNodeOpenMap[myFolderGUIDs[aPath]])
 		for (const auto& entry : std::filesystem::directory_iterator(aPath))
 			if (entry.is_directory())
-				DrawDirectoryTree(entry.path(), aMargin + 1.8f);
+				DrawDirectoryTree(entry.path(), aMargin + aMarginIncrement, aMarginIncrement);
 }
