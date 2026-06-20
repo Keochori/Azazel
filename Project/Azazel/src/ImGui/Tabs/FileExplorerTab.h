@@ -9,6 +9,12 @@
 
 using Microsoft::WRL::ComPtr;
 
+struct RightClickContextData
+{
+	std::filesystem::path myRightClickedPath;
+	bool myMultiplePaths = false;
+};
+
 struct PendingMove
 {
 	std::vector<std::filesystem::path> mySources;
@@ -41,7 +47,8 @@ private:
 	void ShiftSelectDirectory(const std::filesystem::path& aClickedPath);
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
 	void OpenParentDirectories(const std::filesystem::path& aPath);
-	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
+	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel, bool aRightClickContextOpen);
+	void RightClickContext();
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
 
@@ -55,6 +62,8 @@ private:
 	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
 	std::unordered_map<AssetGUID, bool> myNodeOpenMap;
 
+	bool myOpenRightClickContext = false;
+	RightClickContextData myRightClickContextData;
 	std::optional<PendingMove> myPendingMove;
 
 	float myLeftPanelWidth = 250.0f;
