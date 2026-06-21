@@ -272,7 +272,7 @@ void FileExplorerTab::OpenParentDirectories(const std::filesystem::path& aPath)
 	}
 }
 
-void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel, bool aRightClickContextOpen)
+void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
 {
 	bool selected = false;
 	for (const auto& path : mySelectedPaths)
@@ -289,7 +289,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 	ImVec4 gray(0.5f, 0.5f, 0.5f, 0.25f);
 
 	// Node color
-	bool focused = myLeftPanelFocused || aRightClickContextOpen;
+	bool focused = myLeftPanelFocused || myRightClickContextOpen;
 	ImGui::PushStyleColor(ImGuiCol_HeaderActive, blue);
 	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? (focused ? blue : gray) : transparent);
 	if (!focused)
@@ -344,8 +344,10 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		if (!mySelectedPaths.contains(aPath))
 			LeftClickDirectory(aPath);
 		
-		myOpenRightClickContext = true;
-		myRightClickContextData = RightClickContextData(aPath, mySelectedPaths.size() > 1);
+		myRightClickContextPos = ImGui::GetMousePos();
+		myJustOpenedRightClickContext = true;
+		myRightClickContextOpen = true;
+		myRightClickedPath = aPath;
 	}
 
 	// Pop ImGui style colors
@@ -357,33 +359,42 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 
 void FileExplorerTab::RightClickContext()
 {
-	if (myOpenRightClickContext)
-	{
-		myOpenRightClickContext = false;
-		ImGui::OpenPopup("RightClickContext");
-	}
+	bool contextHovered = false;
 
-	if (ImGui::BeginPopup("RightClickContext"))
+	if (myRightClickContextOpen)
 	{
+		ImGui::SetNextWindowPos(myRightClickContextPos);
+
+		ImGui::Begin("RightClickContext",
+			nullptr,
+			ImGuiWindowFlags_NoTitleBar |
+			ImGuiWindowFlags_AlwaysAutoResize);
+
+		contextHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+
+		// Menu Items
 		if (ImGui::MenuItem("Create Folder"))
 		{
-
+			myRightClickContextOpen = false;
 		}
 
 		if (ImGui::MenuItem("Delete"))
 		{
-
+			myRightClickContextOpen = false;
 		}
 
-		if (!myRightClickContextData.myMultiplePaths)
+		bool renameEnabled = (mySelectedPaths.size() == 1);
+		if (ImGui::MenuItem("Rename", nullptr, false, renameEnabled))
 		{
-			if (ImGui::MenuItem("Rename"))
-			{
-
-			}
+			myRightClickContextOpen = false;
 		}
 
-		ImGui::EndPopup();
+		ImGui::End();
+
+		if (myJustOpenedRightClickContext)
+			myJustOpenedRightClickContext = false;
+		else if (myRightClickContextOpen && !contextHovered && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
+			myRightClickContextOpen = false;
 	}
 }
  
@@ -392,7 +403,6 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 	std::string label = aPath.filename().string();
 	bool& open = myNodeOpenMap[myFolderGUIDs[aPath]];
 	bool hasDirectories = HasDirectories(aPath);
-	bool rightClickContextOpen = ImGui::IsPopupOpen("RightClickContext");
 
 	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
 	if (!hasDirectories)
@@ -432,7 +442,7 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 	ImGui::SameLine();
 
 	// Node
-	NodeLogic(aPath, label, rightClickContextOpen);
+	NodeLogic(aPath, label);
 
 	// Drag Drop Logic
 	DragDropDirectoryNode(aPath);
