@@ -363,6 +363,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 	}
 
 	// Left-Click
+	bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 	if (ImGui::IsItemActivated())
 	{
 		// Shift-Click
@@ -391,7 +392,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		// Left-Click
 		else
 		{
-			if (!mySelectedPaths.contains(aPath))
+			if (!mySelectedPaths.contains(aPath) || !clicked)
 				LeftClickDirectory(aPath);
 			else
 				myLeftClickOnRelease = true;
