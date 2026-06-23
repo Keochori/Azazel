@@ -32,8 +32,28 @@ void FileExplorerTab::Update()
 		// Check for Pending Move
 		UpdatePendingMove();
 
+		// Check for keyboard inputs
+		CheckInputs();
+
 		ImGui::End();
 	}
+}
+
+void FileExplorerTab::CheckInputs()
+{
+	// Renaming
+	if (ImGui::IsKeyPressed(ImGuiKey_F2))
+		if (!myRightClickContextOpen)
+			if (mySelectedPaths.size() == 1)
+				StartRenaming(myAnchorPath);
+	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+		if (!myRenamingPath.empty())
+			myRenamingPath.clear();
+
+	// Right-Click Context
+	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+		if (myRightClickContextOpen)
+			myRightClickContextOpen = false;
 }
 
 void FileExplorerTab::OpenTab()
@@ -140,6 +160,7 @@ AssetGUID FileExplorerTab::GetFolderGUID(const std::filesystem::path& aPath)
 
 void FileExplorerTab::BuildGUIDCache()
 {
+	myFolderGUIDs.clear();
 	myFolderGUIDs[myRootPath] = GetFolderGUID(myRootPath);
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(myRootPath))
@@ -295,8 +316,35 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 	if (!focused)
 		ImGui::PushStyleColor(ImGuiCol_Header, gray);
 
+	// Rename Input Field
+	if (myRenamingPath == aPath)
+	{
+		bool renamed = false;
+		if (myFocusRenameInputField)
+		{
+			ImGui::SetKeyboardFocusHere();
+			myFocusRenameInputField = false;
+		}
+		if (ImGui::InputText("##Rename", myRenameBuffer, sizeof(myRenameBuffer), 
+			ImGuiInputTextFlags_AutoSelectAll | 
+			ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			myRenamingPath.clear();
+			Rename(aPath);
+			renamed = true;
+		}
+
+		if (ImGui::IsItemDeactivated())
+		{
+			if (!renamed)
+			{
+				myRenamingPath.clear();
+				Rename(aPath);
+			}
+		}
+	}
 	// Node
-	if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+	else if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
 	{
 		if (myLeftClickOnRelease)
 			LeftClickDirectory(aPath);
@@ -357,6 +405,38 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		ImGui::PopStyleColor(2);
 }
 
+void FileExplorerTab::StartRenaming(const std::filesystem::path& aPath)
+{
+	myFocusRenameInputField = true;
+	myRenamingPath = aPath;
+	strcpy_s(myRenameBuffer, myRenamingPath.filename().string().c_str());
+}
+
+void FileExplorerTab::Rename(const std::filesystem::path& aPath)
+{
+	std::string renameString(myRenameBuffer);
+
+	if (!renameString.empty())
+	{
+		const std::filesystem::path newPath = aPath.parent_path() / renameString;
+
+		// Rename
+		std::filesystem::rename(aPath, newPath);
+
+		// Rebuild GUID Cache
+		BuildGUIDCache();
+
+		// Re-select node
+		if (mySelectedPaths.contains(aPath))
+		{
+			mySelectedPaths.erase(aPath);
+			mySelectedPaths.insert(newPath);
+			if (myAnchorPath == aPath)
+				myAnchorPath = newPath;
+		}
+	}
+}
+
 void FileExplorerTab::RightClickContext()
 {
 	bool contextHovered = false;
@@ -369,8 +449,6 @@ void FileExplorerTab::RightClickContext()
 			nullptr,
 			ImGuiWindowFlags_NoTitleBar |
 			ImGuiWindowFlags_AlwaysAutoResize);
-
-		contextHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 
 		// Menu Items
 		if (ImGui::MenuItem("Create Folder"))
@@ -387,8 +465,10 @@ void FileExplorerTab::RightClickContext()
 		if (ImGui::MenuItem("Rename", nullptr, false, renameEnabled))
 		{
 			myRightClickContextOpen = false;
+			StartRenaming(myRightClickedPath);
 		}
 
+		contextHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		ImGui::End();
 
 		if (myJustOpenedRightClickContext)
@@ -454,8 +534,9 @@ void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int 
 {
 	DrawDirectoryNode(aPath, aMargin);
 
-	if (myNodeOpenMap[myFolderGUIDs[aPath]])
-		for (const auto& entry : std::filesystem::directory_iterator(aPath))
-			if (entry.is_directory())
-				DrawDirectoryTree(entry.path(), aMargin + aMarginIncrement, aMarginIncrement);
+	if (myFolderGUIDs.contains(aPath))
+		if (myNodeOpenMap[myFolderGUIDs[aPath]])
+			for (const auto& entry : std::filesystem::directory_iterator(aPath))
+				if (entry.is_directory())
+					DrawDirectoryTree(entry.path(), aMargin + aMarginIncrement, aMarginIncrement);
 }

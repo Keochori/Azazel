@@ -22,6 +22,7 @@ public:
 	~FileExplorerTab() = default;
 
 	void Update();
+	void CheckInputs();
 	void OpenTab();
 
 private:
@@ -42,6 +43,8 @@ private:
 	void DragDropDirectoryNode(const std::filesystem::path& aPath);
 	void OpenParentDirectories(const std::filesystem::path& aPath);
 	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
+	void StartRenaming(const std::filesystem::path& aPath);
+	void Rename(const std::filesystem::path& aPath);
 	void RightClickContext();
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
@@ -56,14 +59,22 @@ private:
 	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
 	std::unordered_map<AssetGUID, bool> myNodeOpenMap;
 
+	float myLeftPanelWidth = 250.0f;
+	float myLeftPanelFocused = false;
+
+	// Renaming
+	char myRenameBuffer[256];
+	bool myFocusRenameInputField = false;
+	std::filesystem::path myRenamingPath;
+
+	// Right-Click Context
 	bool myRightClickContextOpen = false;
 	bool myJustOpenedRightClickContext = false;
 	ImVec2 myRightClickContextPos = { 0,0 };
 	std::filesystem::path myRightClickedPath;
 	std::optional<PendingMove> myPendingMove;
 
-	float myLeftPanelWidth = 250.0f;
-	float myLeftPanelFocused = false;
+	// Icons
 	ID3D11ShaderResourceView* myFolderIcon_Closed;
 	ID3D11ShaderResourceView* myFolderIcon_Open;
 	ID3D11ShaderResourceView* myFolderIcon_Empty;
