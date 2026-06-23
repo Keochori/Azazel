@@ -2,6 +2,7 @@
 #include "FileExplorerTab.h"
 #include <algorithm>
 #include <fstream>
+#include <cctype>
 
 FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons)
 {
@@ -434,7 +435,7 @@ void FileExplorerTab::Rename(const std::filesystem::path& aPath)
 
 	if (!renameString.empty())
 	{
-		const std::filesystem::path newPath = aPath.parent_path() / renameString;
+		const std::filesystem::path newPath = aPath.parent_path() / CheckValidName(aPath, renameString);
 
 		// Rename
 		std::filesystem::rename(aPath, newPath);
@@ -451,6 +452,43 @@ void FileExplorerTab::Rename(const std::filesystem::path& aPath)
 				myAnchorPath = newPath;
 		}
 	}
+}
+
+std::string FileExplorerTab::CheckValidName(const std::filesystem::path& aPath, const std::string& aName)
+{
+	std::string currentName = aName;
+	bool foundValidName = false;
+
+	while (!foundValidName)
+	{
+		foundValidName = true;
+		for (const auto& entry : std::filesystem::directory_iterator(aPath.parent_path()))
+		{
+			if (entry.is_directory())
+			{
+				if (entry.path() != aPath)
+				{
+					std::string fileName = entry.path().filename().string();
+					if (fileName == currentName)
+					{
+						char lastChar = fileName.back();
+						if (std::isdigit(lastChar))
+						{
+							currentName.pop_back();
+							currentName += (int)lastChar + 1;
+						}
+						else
+						{
+							currentName += " 1";
+						}
+						foundValidName = false;
+					}
+				}
+			}
+		}
+	}
+
+	return currentName;
 }
 
 void FileExplorerTab::RightClickContext()

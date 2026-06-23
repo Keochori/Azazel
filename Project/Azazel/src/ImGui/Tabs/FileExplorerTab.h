@@ -45,6 +45,7 @@ private:
 	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
 	void StartRenaming(const std::filesystem::path& aPath);
 	void Rename(const std::filesystem::path& aPath);
+	std::string CheckValidName(const std::filesystem::path& aPath, const std::string& aName);
 	void RightClickContext();
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
