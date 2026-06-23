@@ -308,6 +308,7 @@ void FileExplorerTab::OpenParentDirectories(const std::filesystem::path& aPath)
 
 void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
 {
+	bool nodeActivated = false;
 	bool selected = false;
 	for (const auto& path : mySelectedPaths)
 	{
@@ -357,15 +358,20 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 		}
 	}
 	// Node
-	else if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+	else
 	{
-		if (myLeftClickOnRelease)
-			LeftClickDirectory(aPath);
+		if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+		{
+			if (myLeftClickOnRelease)
+				LeftClickDirectory(aPath);
+		}
+
+		nodeActivated = ImGui::IsItemActivated();
 	}
 
 	// Left-Click
 	bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
-	if (ImGui::IsItemActivated())
+	if (nodeActivated)
 	{
 		// Shift-Click
 		if (ImGui::GetIO().KeyShift)
@@ -433,9 +439,13 @@ void FileExplorerTab::Rename(const std::filesystem::path& aPath)
 {
 	std::string renameString(myRenameBuffer);
 
+	// Renomve invalid characters
+	while (!renameString.empty() && (renameString.back() == ' ' || renameString.back() == '.'))
+		renameString.pop_back();
+
 	if (!renameString.empty())
 	{
-		const std::filesystem::path newPath = aPath.parent_path() / CheckValidName(aPath, renameString);
+		const std::filesystem::path newPath = aPath.parent_path() / CheckValidName(aPath, renameString, false);
 
 		// Rename
 		std::filesystem::rename(aPath, newPath);
@@ -454,15 +464,19 @@ void FileExplorerTab::Rename(const std::filesystem::path& aPath)
 	}
 }
 
-std::string FileExplorerTab::CheckValidName(const std::filesystem::path& aPath, const std::string& aName)
+std::string FileExplorerTab::CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aNewFile)
 {
 	std::string currentName = aName;
-	bool foundValidName = false;
 
+	std::filesystem::path pathToIterate = aPath;
+	if (!aNewFile)
+		pathToIterate = aPath.parent_path();
+
+	bool foundValidName = false;
 	while (!foundValidName)
 	{
 		foundValidName = true;
-		for (const auto& entry : std::filesystem::directory_iterator(aPath.parent_path()))
+		for (const auto& entry : std::filesystem::directory_iterator(pathToIterate))
 		{
 			if (entry.is_directory())
 			{
@@ -471,17 +485,35 @@ std::string FileExplorerTab::CheckValidName(const std::filesystem::path& aPath, 
 					std::string fileName = entry.path().filename().string();
 					if (fileName == currentName)
 					{
+						foundValidName = false;
+
+						// If number present at the end of filename, iterate it by one.
 						char lastChar = fileName.back();
 						if (std::isdigit(lastChar))
 						{
-							currentName.pop_back();
-							currentName += (int)lastChar + 1;
+							bool allDigits = true;
+							for (int i = 1; i < fileName.size(); i++)
+							{
+								if (!std::isdigit(fileName[fileName.size() - i]))
+								{
+									int digit = std::stoi(fileName.substr(fileName.size() - (i - 1)));
+									currentName = aName + " " + std::to_string((digit + 1));
+									allDigits = false;
+									break;
+								}
+							}
+
+							if (allDigits)
+							{
+								int digit = std::stoi(fileName);
+								currentName = std::to_string((digit + 1));
+							}
 						}
+						// Add '1' to filename if no present numbers
 						else
 						{
 							currentName += " 1";
 						}
-						foundValidName = false;
 					}
 				}
 			}
@@ -508,6 +540,20 @@ void FileExplorerTab::RightClickContext()
 		if (ImGui::MenuItem("Create Folder"))
 		{
 			myRightClickContextOpen = false;
+
+			mySelectedPaths.clear();
+			mySelectedPaths.insert(myAnchorPath);
+
+			// Open parent node
+			myNodeOpenMap[myFolderGUIDs[myRightClickedPath]] = true;
+
+			// Create
+			std::filesystem::path newDirectory = myRightClickedPath / CheckValidName(myRightClickedPath, "New File", true);
+			std::filesystem::create_directory(newDirectory);
+
+			// Create new GUID and add to cache
+			myFolderGUIDs[newDirectory] = GetFolderGUID(newDirectory);
+			StartRenaming(newDirectory);
 		}
 
 		if (ImGui::MenuItem("Delete"))
@@ -534,7 +580,6 @@ void FileExplorerTab::RightClickContext()
  
 void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin)
 {
-	std::string label = aPath.filename().string();
 	bool& open = myNodeOpenMap[myFolderGUIDs[aPath]];
 	bool hasDirectories = HasDirectories(aPath);
 
@@ -543,8 +588,7 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 		folderIcon = (ImTextureID)myFolderIcon_Empty;
 	ImTextureID arrowIcon = open ? (ImTextureID)myArrowIcon_Down : (ImTextureID)myArrowIcon_Right;
 
-
-	ImGui::PushID(label.c_str());
+	ImGui::PushID(aPath.string().c_str());
 
 	// Margin
 	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + aMargin * 16.0f);
@@ -557,7 +601,7 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, transparent);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, transparent);
 
-		std::string buttonLabel = std::string(label) + "_arrowButton";
+		std::string buttonLabel = std::string(aPath.string()) + "_arrowButton";
 		if (ImGui::ImageButton(buttonLabel.c_str(), arrowIcon, ImVec2(9, 9)))
 			open = !open;
 
@@ -576,7 +620,7 @@ void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, floa
 	ImGui::SameLine();
 
 	// Node
-	NodeLogic(aPath, label);
+	NodeLogic(aPath, aPath.filename().string());
 
 	// Drag Drop Logic
 	DragDropDirectoryNode(aPath);
