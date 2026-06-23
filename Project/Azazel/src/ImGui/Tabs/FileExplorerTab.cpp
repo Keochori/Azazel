@@ -44,8 +44,7 @@ void FileExplorerTab::CheckInputs()
 	// Renaming
 	if (ImGui::IsKeyPressed(ImGuiKey_F2))
 		if (!myRightClickContextOpen)
-			if (mySelectedPaths.size() == 1)
-				StartRenaming(myAnchorPath);
+			StartRenaming(myAnchorPath);
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 		if (!myRenamingPath.empty())
 			myRenamingPath.clear();
@@ -112,11 +111,19 @@ void FileExplorerTab::UpdatePendingMove()
 {
 	if (myPendingMove.has_value())
 	{
+		bool foundAnchor = false;
 		mySelectedPaths.clear();
 		const std::vector<std::filesystem::path>& sources = myPendingMove->mySources;
 		for (const auto& source : sources)
 		{
 			const std::filesystem::path destination = myPendingMove->myDestination / source.filename();
+
+			// Retain anchor path
+			if (source == myAnchorPath)
+			{
+				myAnchorPath = destination;
+				foundAnchor = true;
+			}
 
 			// Move
 			std::filesystem::rename(source, destination);
@@ -125,12 +132,17 @@ void FileExplorerTab::UpdatePendingMove()
 			mySelectedPaths.insert(destination);
 		}
 
+		// Assign new anchor if none was found
+		if (!foundAnchor)
+			myAnchorPath = *mySelectedPaths.begin();
+
 		// Rebuild GUID cache after moving files
 		BuildGUIDCache();
 
 		// Open destination folder after moving
 		myNodeOpenMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
 
+		myLeftClickOnRelease = false;
 		myPendingMove.reset();
 	}
 }
@@ -351,7 +363,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 	}
 
 	// Left-Click
-	if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+	if (ImGui::IsItemActivated())
 	{
 		// Shift-Click
 		if (ImGui::GetIO().KeyShift)
@@ -407,9 +419,12 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 
 void FileExplorerTab::StartRenaming(const std::filesystem::path& aPath)
 {
-	myFocusRenameInputField = true;
-	myRenamingPath = aPath;
-	strcpy_s(myRenameBuffer, myRenamingPath.filename().string().c_str());
+	if (mySelectedPaths.size() == 1 && myAnchorPath != myRootPath)
+	{
+		myFocusRenameInputField = true;
+		myRenamingPath = aPath;
+		strcpy_s(myRenameBuffer, myRenamingPath.filename().string().c_str());
+	}
 }
 
 void FileExplorerTab::Rename(const std::filesystem::path& aPath)
@@ -461,7 +476,7 @@ void FileExplorerTab::RightClickContext()
 			myRightClickContextOpen = false;
 		}
 
-		bool renameEnabled = (mySelectedPaths.size() == 1);
+		bool renameEnabled = (mySelectedPaths.size() == 1 && myAnchorPath != myRootPath);
 		if (ImGui::MenuItem("Rename", nullptr, false, renameEnabled))
 		{
 			myRightClickContextOpen = false;
