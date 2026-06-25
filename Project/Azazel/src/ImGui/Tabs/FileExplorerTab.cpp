@@ -124,19 +124,24 @@ void FileExplorerTab::UpdatePendingMove()
 {
 	if (myPendingMove.has_value())
 	{
-		bool foundAnchor = false;
+		// Fetch GUID for anchor and selected paths
+		AssetGUID myAnchorGUID = myFolderGUIDs[myAnchorPath];
+		std::unordered_set<AssetGUID> mySelectedGUIDs;
+		for (const auto& selectedPath : mySelectedPaths)
+			mySelectedGUIDs.insert(myFolderGUIDs[selectedPath]);
+
 		mySelectedPaths.clear();
+
 		const std::vector<std::filesystem::path>& sources = myPendingMove->mySources;
+		std::vector<std::filesystem::path> destinations;
 		for (const auto& source : sources)
 		{
 			const std::filesystem::path destination = myPendingMove->myDestination / source.filename();
+			destinations.push_back(destination);
 
 			// Retain anchor path
 			if (source == myAnchorPath)
-			{
 				myAnchorPath = destination;
-				foundAnchor = true;
-			}
 
 			// Move
 			std::filesystem::rename(source, destination);
@@ -145,12 +150,21 @@ void FileExplorerTab::UpdatePendingMove()
 			mySelectedPaths.insert(destination);
 		}
 
-		// Assign new anchor if none was found
-		if (!foundAnchor)
-			myAnchorPath = *mySelectedPaths.begin();
-
 		// Rebuild GUID cache after moving files
 		BuildGUIDCache();
+
+		// Retain selection & anchor path
+		for (const auto& destination : destinations)
+		{
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(destination))
+			{
+				AssetGUID guid = myFolderGUIDs[entry.path()];
+				if (guid == myAnchorGUID)
+					myAnchorPath = entry.path();
+				if (mySelectedGUIDs.contains(guid))
+					mySelectedPaths.insert(entry.path());
+			}
+		}
 
 		// Open destination folder after moving
 		myNodeOpenMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
