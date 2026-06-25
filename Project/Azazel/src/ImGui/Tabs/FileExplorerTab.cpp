@@ -54,6 +54,15 @@ void FileExplorerTab::CheckInputs()
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 		if (myRightClickContextOpen)
 			myRightClickContextOpen = false;
+
+	// Delete Confirm Context
+	if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+		if (!myDeleteConfirmContextOpen)
+			if (!mySelectedPaths.contains(myRootPath))
+			{
+				myDeleteConfirmContextOpen = true;
+				ImGui::OpenPopup("Confirm Delete");
+			}
 }
 
 void FileExplorerTab::OpenTab()
@@ -67,9 +76,10 @@ void FileExplorerTab::DrawLeftPanel()
 
 	myLeftPanelFocused = ImGui::IsWindowFocused();
 	DrawDirectoryTree(myRootPath, 0, 1.8f);
-	RightClickContext();
-
 	ImGui::EndChild();
+
+	RightClickContext();
+	DeleteConfirmContext();
 }
 
 void FileExplorerTab::DrawRightPanel()
@@ -268,28 +278,9 @@ void FileExplorerTab::DragDropDirectoryNode(const std::filesystem::path& aPath)
 					break;
 				}
 			}
+
 			if (!insideDirectory)
-			{
-				std::vector<std::filesystem::path> myHighestDirectories;
-				for (const auto& pathToCheck : mySelectedPaths)
-				{
-					bool highestDirectory = true;
-					for (const auto& currentPath : mySelectedPaths)
-					{
-						if (pathToCheck != currentPath)
-						{
-							if (IsInsideDirectory(pathToCheck, currentPath))
-							{
-								highestDirectory = false;
-								break;
-							}
-						}
-					}
-					if (highestDirectory)
-						myHighestDirectories.push_back(pathToCheck);
-				}
-				myPendingMove.emplace(myHighestDirectories, destination);
-			}
+				myPendingMove.emplace(GetHighestDirectories(mySelectedPaths), destination);
 		}
 
 		ImGui::EndDragDropTarget();
@@ -523,12 +514,34 @@ std::string FileExplorerTab::CheckValidName(const std::filesystem::path& aPath, 
 	return currentName;
 }
 
+std::vector<std::filesystem::path> FileExplorerTab::GetHighestDirectories(const std::unordered_set<std::filesystem::path>& aDirectories)
+{
+	std::vector<std::filesystem::path> highestDirectories;
+	for (const auto& pathToCheck : aDirectories)
+	{
+		bool highestDirectory = true;
+		for (const auto& currentPath : aDirectories)
+		{
+			if (pathToCheck != currentPath)
+			{
+				if (IsInsideDirectory(pathToCheck, currentPath))
+				{
+					highestDirectory = false;
+					break;
+				}
+			}
+		}
+		if (highestDirectory)
+			highestDirectories.push_back(pathToCheck);
+	}
+	return highestDirectories;
+}
+
 void FileExplorerTab::RightClickContext()
 {
-	bool contextHovered = false;
-
 	if (myRightClickContextOpen)
 	{
+		bool contextHovered = false;
 		ImGui::SetNextWindowPos(myRightClickContextPos);
 
 		ImGui::Begin("RightClickContext",
@@ -541,6 +554,7 @@ void FileExplorerTab::RightClickContext()
 		{
 			myRightClickContextOpen = false;
 
+			// Select only Anchor path
 			mySelectedPaths.clear();
 			mySelectedPaths.insert(myAnchorPath);
 
@@ -556,9 +570,11 @@ void FileExplorerTab::RightClickContext()
 			StartRenaming(newDirectory);
 		}
 
-		if (ImGui::MenuItem("Delete"))
+		bool deleteEnabled = !mySelectedPaths.contains(myRootPath);
+		if (ImGui::MenuItem("Delete", nullptr, false, deleteEnabled))
 		{
 			myRightClickContextOpen = false;
+			myDeleteConfirmContextOpen = true;
 		}
 
 		bool renameEnabled = (mySelectedPaths.size() == 1 && myAnchorPath != myRootPath);
@@ -575,6 +591,69 @@ void FileExplorerTab::RightClickContext()
 			myJustOpenedRightClickContext = false;
 		else if (myRightClickContextOpen && !contextHovered && (ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right)))
 			myRightClickContextOpen = false;
+
+		if (myDeleteConfirmContextOpen)
+			ImGui::OpenPopup("Confirm Delete");
+	}
+}
+
+void FileExplorerTab::DeleteConfirmContext()
+{
+	if (myDeleteConfirmContextOpen)
+	{
+		if (ImGui::BeginPopupModal("Confirm Delete", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			for (const std::filesystem::path& entry : mySelectedPaths)
+				ImGui::Text(entry.string().c_str());
+
+			ImGui::NewLine();
+
+			std::string assetWord = "asset";
+			if (mySelectedPaths.size() > 1)
+				assetWord = "assets";
+			
+			std::string question = "Delete selected " + assetWord + "? This action cannot be undone.";
+			ImGui::Text(question.c_str());
+
+			ImGui::NewLine();
+
+			if (ImGui::Button("Delete"))
+			{
+				ImGui::CloseCurrentPopup();
+				myDeleteConfirmContextOpen = false;
+
+				// Make one of the highest directories parent_path selected and anchored
+				const auto highestDirectories = GetHighestDirectories(mySelectedPaths);
+				if (!highestDirectories.empty())
+				{
+					const auto& directory = highestDirectories[0].parent_path();
+					mySelectedPaths.clear();
+					mySelectedPaths.insert(directory);
+					myAnchorPath = directory;
+				}
+
+				for (const auto& path : highestDirectories)
+				{
+					for (const auto& entry : std::filesystem::recursive_directory_iterator(path))
+					{
+						myNodeOpenMap.erase(GetFolderGUID(entry.path()));
+						myFolderGUIDs.erase(entry.path());
+					}
+
+					myNodeOpenMap.erase(GetFolderGUID(path));
+					myFolderGUIDs.erase(path);
+					std::filesystem::remove_all(path);
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel"))
+			{
+				ImGui::CloseCurrentPopup();
+				myDeleteConfirmContextOpen = false;
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 }
  

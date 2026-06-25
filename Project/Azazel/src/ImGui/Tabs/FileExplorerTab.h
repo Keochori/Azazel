@@ -46,7 +46,9 @@ private:
 	void StartRenaming(const std::filesystem::path& aPath);
 	void Rename(const std::filesystem::path& aPath);
 	std::string CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aNewFile);
+	std::vector<std::filesystem::path> GetHighestDirectories(const std::unordered_set<std::filesystem::path>& aDirectories);
 	void RightClickContext();
+	void DeleteConfirmContext();
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
 
@@ -74,6 +76,9 @@ private:
 	ImVec2 myRightClickContextPos = { 0,0 };
 	std::filesystem::path myRightClickedPath;
 	std::optional<PendingMove> myPendingMove;
+
+	// Delete Confirm Context
+	bool myDeleteConfirmContextOpen = false;
 
 	// Icons
 	ID3D11ShaderResourceView* myFolderIcon_Closed;
