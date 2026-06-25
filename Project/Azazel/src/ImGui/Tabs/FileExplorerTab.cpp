@@ -44,8 +44,9 @@ void FileExplorerTab::CheckInputs()
 {
 	// Renaming
 	if (ImGui::IsKeyPressed(ImGuiKey_F2))
-		if (!myRightClickContextOpen)
-			StartRenaming(myAnchorPath);
+		if (myLeftPanelFocused)
+			if (!myRightClickContextOpen)
+				StartRenaming(myAnchorPath);
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 		if (!myRenamingPath.empty())
 			myRenamingPath.clear();
@@ -57,12 +58,13 @@ void FileExplorerTab::CheckInputs()
 
 	// Delete Confirm Context
 	if (ImGui::IsKeyPressed(ImGuiKey_Delete))
-		if (!myDeleteConfirmContextOpen)
-			if (!mySelectedPaths.contains(myRootPath))
-			{
-				myDeleteConfirmContextOpen = true;
-				ImGui::OpenPopup("Confirm Delete");
-			}
+		if (myLeftPanelFocused)
+			if (!myDeleteConfirmContextOpen)
+				if (!mySelectedPaths.contains(myRootPath))
+				{
+					myDeleteConfirmContextOpen = true;
+					ImGui::OpenPopup("Confirm Delete");
+				}
 }
 
 void FileExplorerTab::OpenTab()
