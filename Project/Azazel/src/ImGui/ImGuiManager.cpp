@@ -22,6 +22,11 @@ ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID
 	ImGui_ImplDX11_Init(aDevice.Get(), aContext.Get());
 }
 
+void ImGuiManager::Shutdown()
+{
+	myFileExplorerTab.Shutdown();
+}
+
 void ImGuiManager::NewFrame()
 {
 	ImGui_ImplDX11_NewFrame();

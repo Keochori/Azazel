@@ -21,6 +21,7 @@ public:
 	FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons);
 	~FileExplorerTab() = default;
 
+	void Shutdown();
 	void Update();
 	void CheckInputs();
 	void OpenTab();
@@ -60,7 +61,7 @@ private:
 	std::vector<std::filesystem::path> myVisibleNodes;
 	std::unordered_set<std::filesystem::path> mySelectedPaths;
 	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
-	std::unordered_map<AssetGUID, bool> myNodeOpenMap;
+	std::unordered_map<AssetGUID, bool> myExpandedFoldersMap;
 
 	float myLeftPanelWidth = 250.0f;
 	float myLeftPanelFocused = false;

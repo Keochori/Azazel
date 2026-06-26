@@ -17,6 +17,7 @@ public:
 		ComPtr<ID3D11ShaderResourceView>& aSceneSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene);
 	~ImGuiManager() = default;
 
+	void Shutdown();
 	void NewFrame();
 	void Update();
 	void Render();

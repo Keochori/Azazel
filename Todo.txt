@@ -41,6 +41,8 @@
 
 - Change default variable initialization into .h instead of constructor when it isn't changed by the constructor arguments.
 
+- When deleting directory/ies in FileExplorerTab Directory Tree, sort the next selected path by alpabet so its always on top.
+
 // Repeated checks
 - = default on all constructors
 - check const& returns and arguments

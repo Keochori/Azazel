@@ -9,6 +9,7 @@
 #include "Animator/Animator.h"
 #include "Scene/Entity.h"
 #include "Scene/Components/Components.h"
+#include "EditorState/EditorState.h"
 
 Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 {
@@ -18,6 +19,7 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	myAnimator = std::make_unique<Animator>();
 	myScene = std::make_shared<Scene>();
 
+	// ImGui
 	std::unordered_map<std::string, ID3D11ShaderResourceView*> icons;
 	icons.emplace("folder_closed", myAssetManager->GetTexture("folder_closed.png", myDX11->GetDevice())->mySRV.Get());
 	icons.emplace("folder_open", myAssetManager->GetTexture("folder_open.png", myDX11->GetDevice())->mySRV.Get());
@@ -97,8 +99,16 @@ Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
 	botTransform.myScale = { 0.025f,0.025f,0.025f };
 }
 
-Engine::~Engine()
+Engine::~Engine() 
 {
+}
+
+void Engine::Shutdown()
+{
+	myImGuiManager->Shutdown();
+	EditorState& editorState = EditorState::GetInstance();
+	editorState.SetWindowSize(myCurrentWindowWidth, myCurrentWindowHeight);
+	editorState.SaveState();
 }
 
 void Engine::Update()
@@ -161,6 +171,9 @@ void Engine::OnWindowResize(UINT aWidth, UINT aHeight)
 
 	myDX11->OnWindowResize(aWidth, aHeight, myFullScreenMode);
 	myRenderer->SetAspectRatio(myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
+
+	myCurrentWindowWidth = aWidth;
+	myCurrentWindowHeight = aHeight;
 }
 
 void Engine::OnTextureResize(ImVec2 aSize)

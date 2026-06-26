@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "FileExplorerTab.h"
+#include "EditorState/EditorState.h"
 #include <algorithm>
 #include <fstream>
 #include <cctype>
@@ -10,11 +11,29 @@ FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderRes
 	myAnchorPath = myRootPath;
 	BuildGUIDCache();
 
+	const auto& expandedFolders = EditorState::GetInstance().GetExpandedFolders();
+	for (const auto& guid : expandedFolders)
+		myExpandedFoldersMap[guid] = true;
+
 	myFolderIcon_Closed = aIcons.at("folder_closed");
 	myFolderIcon_Open = aIcons.at("folder_open");
 	myFolderIcon_Empty = aIcons.at("folder_empty");
 	myArrowIcon_Right = aIcons.at("arrow_right");
 	myArrowIcon_Down = aIcons.at("arrow_down");
+}
+
+void FileExplorerTab::Shutdown()
+{
+	std::unordered_set<AssetGUID> expandedFolders;
+	for (const auto& entry : myExpandedFoldersMap)
+	{
+		AssetGUID guid = entry.first;
+		bool expanded = entry.second;
+		if (expanded)
+			expandedFolders.insert(guid);
+	}
+
+	EditorState::GetInstance().SetExpandedFolders(expandedFolders);
 }
 
 void FileExplorerTab::Update()
@@ -167,7 +186,7 @@ void FileExplorerTab::UpdatePendingMove()
 		}
 
 		// Open destination folder after moving
-		myNodeOpenMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
+		myExpandedFoldersMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
 
 		myLeftClickOnRelease = false;
 		myPendingMove.reset();
@@ -231,7 +250,7 @@ void FileExplorerTab::BuildVisibleNodeList(const std::filesystem::path& aPath)
 {
 	myVisibleNodes.push_back(aPath);
 
-	if (myNodeOpenMap[myFolderGUIDs[aPath]])
+	if (myExpandedFoldersMap[myFolderGUIDs[aPath]])
 	{
 		for (const auto& entry : std::filesystem::directory_iterator(aPath))
 		{
@@ -307,7 +326,7 @@ void FileExplorerTab::OpenParentDirectories(const std::filesystem::path& aPath)
 {
 	if (aPath != myRootPath)
 	{
-		myNodeOpenMap[myFolderGUIDs[aPath.parent_path()]] = true;
+		myExpandedFoldersMap[myFolderGUIDs[aPath.parent_path()]] = true;
 
 		OpenParentDirectories(aPath.parent_path());
 	}
@@ -575,7 +594,7 @@ void FileExplorerTab::RightClickContext()
 			mySelectedPaths.insert(myAnchorPath);
 
 			// Open parent node
-			myNodeOpenMap[myFolderGUIDs[myRightClickedPath]] = true;
+			myExpandedFoldersMap[myFolderGUIDs[myRightClickedPath]] = true;
 
 			// Create
 			std::filesystem::path newDirectory = myRightClickedPath / CheckValidName(myRightClickedPath, "New File", true);
@@ -652,11 +671,11 @@ void FileExplorerTab::DeleteConfirmContext()
 				{
 					for (const auto& entry : std::filesystem::recursive_directory_iterator(path))
 					{
-						myNodeOpenMap.erase(GetFolderGUID(entry.path()));
+						myExpandedFoldersMap.erase(GetFolderGUID(entry.path()));
 						myFolderGUIDs.erase(entry.path());
 					}
 
-					myNodeOpenMap.erase(GetFolderGUID(path));
+					myExpandedFoldersMap.erase(GetFolderGUID(path));
 					myFolderGUIDs.erase(path);
 					std::filesystem::remove_all(path);
 				}
@@ -675,7 +694,7 @@ void FileExplorerTab::DeleteConfirmContext()
  
 void FileExplorerTab::DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin)
 {
-	bool& open = myNodeOpenMap[myFolderGUIDs[aPath]];
+	bool& open = myExpandedFoldersMap[myFolderGUIDs[aPath]];
 	bool hasDirectories = HasDirectories(aPath);
 
 	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
@@ -728,7 +747,7 @@ void FileExplorerTab::DrawDirectoryTree(const std::filesystem::path& aPath, int 
 	DrawDirectoryNode(aPath, aMargin);
 
 	if (myFolderGUIDs.contains(aPath))
-		if (myNodeOpenMap[myFolderGUIDs[aPath]])
+		if (myExpandedFoldersMap[myFolderGUIDs[aPath]])
 			for (const auto& entry : std::filesystem::directory_iterator(aPath))
 				if (entry.is_directory())
 					DrawDirectoryTree(entry.path(), aMargin + aMarginIncrement, aMarginIncrement);

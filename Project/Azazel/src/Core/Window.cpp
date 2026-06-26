@@ -7,7 +7,7 @@
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-Window::Window() : myHInstance(GetModuleHandle(nullptr))
+Window::Window(int aWidth, int aHeight) : myHInstance(GetModuleHandle(nullptr))
 {
 	// Register the window class.
 	LPCWSTR className = L"Azazel";
@@ -37,11 +37,9 @@ Window::Window() : myHInstance(GetModuleHandle(nullptr))
 	myHWND = hwnd;
 
 	// Set window position and size
-	int width = 1500;
-	int height = 902;
 	int posX = 190;
 	int posY = 80;
-	SetWindowPos(hwnd, nullptr, posX, posY, width, height, 0);
+	SetWindowPos(hwnd, nullptr, posX, posY, aWidth, aHeight, 0);
 	ShowWindow(hwnd, SW_SHOW);
 }
 

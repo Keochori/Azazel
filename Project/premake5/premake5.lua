@@ -23,7 +23,8 @@ project "Azazel"
     debugdir(TargetDir)
 
     AssimpDLL = "Azazel/vendor/assimp/assimp-vc143-mt.dll"
-    postbuildcommands { 
+postbuildcommands {
+        "{MKDIR} %{cfg.targetdir}/Assets",
         "{MKDIR} %{cfg.targetdir}/ProjectSettings",
         "{MKDIR} %{cfg.targetdir}/resources/models",
         "{COPYDIR} ../Assets/Models %{cfg.targetdir}/resources/models",
