@@ -453,7 +453,7 @@ void FileExplorerTab::NodeLogic(const std::filesystem::path& aPath, const std::s
 
 void FileExplorerTab::StartRenaming(const std::filesystem::path& aPath)
 {
-	if (mySelectedPaths.size() == 1 && myAnchorPath != myRootPath)
+	if (mySelectedPaths.size() == 1 && aPath != myRootPath)
 	{
 		myFocusRenameInputField = true;
 		myRenamingPath = aPath;
@@ -602,6 +602,8 @@ void FileExplorerTab::RightClickContext()
 
 			// Create new GUID and add to cache
 			myFolderGUIDs[newDirectory] = GetFolderGUID(newDirectory);
+
+			// Start renaming
 			StartRenaming(newDirectory);
 		}
 
