@@ -4,7 +4,7 @@
 class Window
 {
 public:
-    Window(int aWidth, int aHeight);
+    Window(int aWidth, int aHeight, bool aMaximize);
     ~Window() = default;
 
     bool ProcessMessages();

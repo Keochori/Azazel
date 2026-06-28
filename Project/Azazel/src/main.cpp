@@ -14,14 +14,12 @@ struct WindowSize
 
 WindowSize GetWindowSize()
 {
+	// Default window-size
 	int windowWidth = 1500;
 	int windowHeight = 902;
 
-	// Load State
-	EditorState& editorState = EditorState::GetInstance();
-	editorState.LoadState();
-	int loadedWidth = editorState.GetWindowWidth();
-	int loadedHeight = editorState.GetWindowHeight();
+	int loadedWidth = EditorState::GetInstance().GetWindowWidth();
+	int loadedHeight = EditorState::GetInstance().GetWindowHeight();
 	if (loadedWidth != 0 && loadedHeight != 0)
 	{
 		windowWidth = loadedWidth;
@@ -34,9 +32,14 @@ WindowSize GetWindowSize()
 int main()
 {
 	TIMER.Initialize();
+
+	// Editor State
+	EditorState::GetInstance().LoadState();
 	WindowSize windowSize = GetWindowSize();
-	Window window(windowSize.myWidth, windowSize.myHeight);
-	Engine engine(window.GetHWND());
+	bool maximizeState = EditorState::GetInstance().GetWindowMaximized();
+
+	Window window(windowSize.myWidth, windowSize.myHeight, maximizeState);
+	Engine engine(window.GetHWND(), windowSize.myWidth, windowSize.myHeight);
 	SetWindowLongPtr(window.GetHWND(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(&engine));
 
 	LOG_SUCCESS("STARTED AZAZEL");
@@ -48,6 +51,7 @@ int main()
 		{
 			// Engine shutdown
 			engine.Shutdown();
+			EditorState::GetInstance().SaveState();
 
 			// ImGui shutdown
 			ImGui_ImplDX11_Shutdown();

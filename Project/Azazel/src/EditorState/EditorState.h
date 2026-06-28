@@ -14,9 +14,11 @@ public:
 	void LoadState();
 	void SaveState();
 
+	void SetWindowMaximized(bool aMaximized);
 	void SetWindowSize(UINT aWindowWidth, UINT aWindowHeight);
 	void SetExpandedFolders(const std::unordered_set<AssetGUID>& aExpandedFolders);
 
+	bool GetWindowMaximized();
 	UINT GetWindowWidth();
 	UINT GetWindowHeight();
 	std::unordered_set<AssetGUID> GetExpandedFolders();
@@ -27,6 +29,7 @@ private:
 	const std::string myJsonPath = "ProjectSettings/EditorState.json";
 
 	std::unordered_set<AssetGUID> myExpandedFolders;
+	bool myWindowMaximized = false;
 	UINT myWindowWidth = 0u;
 	UINT myWindowHeight = 0u;
 };

@@ -7,7 +7,7 @@
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-Window::Window(int aWidth, int aHeight) : myHInstance(GetModuleHandle(nullptr))
+Window::Window(int aWidth, int aHeight, bool aMaximize) : myHInstance(GetModuleHandle(nullptr))
 {
 	// Register the window class.
 	LPCWSTR className = L"Azazel";
@@ -40,7 +40,11 @@ Window::Window(int aWidth, int aHeight) : myHInstance(GetModuleHandle(nullptr))
 	int posX = 190;
 	int posY = 80;
 	SetWindowPos(hwnd, nullptr, posX, posY, aWidth, aHeight, 0);
-	ShowWindow(hwnd, SW_SHOW);
+
+	int maximizeState = SW_SHOW;
+	if (aMaximize)
+		maximizeState = SW_MAXIMIZE;
+	ShowWindow(hwnd, maximizeState);
 }
 
 void Window::CreateAndRegisterWindowClass(HINSTANCE& aHInstance, LPCWSTR aClassName)
@@ -117,12 +121,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_SIZE:
 		{
+			if (wParam == SIZE_MINIMIZED)
+				break;
+
 			Engine* engine = reinterpret_cast<Engine*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 			if (engine)
 			{
-				UINT width = LOWORD(lParam);
-				UINT height = HIWORD(lParam);
-				engine->OnWindowResize(width, height);
+				bool didMaximizeOrMinimize = false;
+				if (wParam == SIZE_MAXIMIZED)
+				{
+					engine->SetWindowMaximized(true);
+					didMaximizeOrMinimize = true;
+				}
+				else if (wParam == SIZE_RESTORED)
+				{
+					if (engine->GetWindowMaximized())
+					{
+						engine->SetWindowMaximized(false);
+						didMaximizeOrMinimize = true;
+					}
+				}
+
+				// Keep track of window size in non-maximized form for EditorState
+				if (!didMaximizeOrMinimize)
+				{
+					RECT rect;
+					GetWindowRect(hwnd, &rect);
+					UINT windowWidth = rect.right - rect.left;
+					UINT windowHeight = rect.bottom - rect.top;
+					engine->SetWindowSize(windowWidth, windowHeight);
+				}
+
+				UINT clientWidth = LOWORD(lParam);
+				UINT clientHeight = HIWORD(lParam);
+				engine->OnWindowResize(clientWidth, clientHeight);
 			}
 		}
 		return 0;

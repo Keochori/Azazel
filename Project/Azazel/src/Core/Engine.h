@@ -12,13 +12,17 @@ class Scene;
 class Engine
 {
 public:
-	Engine(HWND& aHWND);
+	Engine(HWND& aHWND, UINT aWindowWidth, UINT aWindowHeight);
 	~Engine();
 
 	void Shutdown();
 	void Update();
-	void OnWindowResize(UINT aWidth, UINT aHeight);
+	void OnWindowResize(UINT aClientWidth, UINT aClientHeight);
 	void OnTextureResize(ImVec2 aSize);
+
+	void SetWindowSize(UINT aWindowWidth, UINT aWindowHeight);
+	void SetWindowMaximized(bool aMaximized);
+	bool GetWindowMaximized();
 
 private:
 	void UpdateAndRenderGame();
@@ -29,9 +33,11 @@ private:
 	std::unique_ptr<Animator> myAnimator;
 	std::shared_ptr<Scene> myScene;
 
-	UINT myCurrentWindowWidth = 0u;
-	UINT myCurrentWindowHeight = 0u;
+	bool myWindowMaximized = false;
+	UINT myWindowWidth = 0u;
+	UINT myWindowHeight = 0u;
+
 	ImVec2 myCurrentSceneTabSize;
-	bool myFullScreenMode;
+	bool myFullScreenMode = false;
 };
 

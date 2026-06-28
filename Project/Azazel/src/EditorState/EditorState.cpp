@@ -16,7 +16,11 @@ void EditorState::LoadState()
 	if (!std::filesystem::exists(myJsonPath))
 	{
 		json j;
+		// Expanded Folders
 		j["expandedFolders"] = json::array();
+		// Window Maximized
+		j["windowMaximized"] = false;
+		// Window Size
 		j["windowSize"]["width"] = 0;
 		j["windowSize"]["height"] = 0;
 
@@ -30,7 +34,11 @@ void EditorState::LoadState()
 		json j;
 		input >> j;
 
+		// Expanded Folders
 		myExpandedFolders = j["expandedFolders"].get<std::unordered_set<AssetGUID>>();
+		// Window Maximized
+		myWindowMaximized = j["windowMaximized"].get<bool>();
+		// Window Size
 		myWindowWidth = j["windowSize"]["width"].get<UINT>();
 		myWindowHeight = j["windowSize"]["height"].get<UINT>();
 	}
@@ -43,9 +51,12 @@ void EditorState::SaveState()
 	std::ifstream input(myJsonPath);
 	input >> j;
 
+	// Expanded Folders
 	if (!myExpandedFolders.empty())
 		j["expandedFolders"] = myExpandedFolders;
-
+	// Window Maximized
+	j["windowMaximized"] = myWindowMaximized;
+	// Non Maximized Window Size
 	if (myWindowWidth != 0 && myWindowHeight != 0)
 	{
 		j["windowSize"]["width"] = myWindowWidth;
@@ -61,10 +72,20 @@ void EditorState::SetExpandedFolders(const std::unordered_set<AssetGUID>& aExpan
 	myExpandedFolders = aExpandedFolders;
 }
 
+void EditorState::SetWindowMaximized(bool aMaximized)
+{
+	myWindowMaximized = aMaximized;
+}
+
 void EditorState::SetWindowSize(UINT aWindowWidth, UINT aWindowHeight)
 {
 	myWindowWidth = aWindowWidth;
 	myWindowHeight = aWindowHeight;
+}
+
+bool EditorState::GetWindowMaximized()
+{
+	return myWindowMaximized;
 }
 
 UINT EditorState::GetWindowWidth()

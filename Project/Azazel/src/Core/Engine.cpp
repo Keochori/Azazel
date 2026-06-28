@@ -11,7 +11,7 @@
 #include "Scene/Components/Components.h"
 #include "EditorState/EditorState.h"
 
-Engine::Engine(HWND& aHWND) : myFullScreenMode(false)
+Engine::Engine(HWND& aHWND, UINT aWindowWidth, UINT aWindowHeight) : myWindowWidth(aWindowWidth), myWindowHeight(aWindowHeight)
 {
 	myDX11 = std::make_unique<DX11>(aHWND);
 	myRenderer = std::make_unique<Renderer>(myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
@@ -106,9 +106,8 @@ Engine::~Engine()
 void Engine::Shutdown()
 {
 	myImGuiManager->Shutdown();
-	EditorState& editorState = EditorState::GetInstance();
-	editorState.SetWindowSize(myCurrentWindowWidth, myCurrentWindowHeight);
-	editorState.SaveState();
+	EditorState::GetInstance().SetWindowSize(myWindowWidth, myWindowHeight);
+	EditorState::GetInstance().SetWindowMaximized(myWindowMaximized);
 }
 
 void Engine::Update()
@@ -117,7 +116,7 @@ void Engine::Update()
 	if (INPUT.IsKeyPressed(eKeys::F))
 	{
 		// Dont change screen mode if window size is too small
-		if (myDX11->GetScreenWidth() < 1 || myDX11->GetScreenHeight() < 1)
+		if (myDX11->GetScreenWidth() < 1.0f || myDX11->GetScreenHeight() < 1.0f)
 			return;
 
 		myFullScreenMode = !myFullScreenMode;
@@ -164,16 +163,14 @@ void Engine::Update()
 	}
 }
 
-void Engine::OnWindowResize(UINT aWidth, UINT aHeight)
+void Engine::OnWindowResize(UINT aClientWidth, UINT aClientHeight)
 {
-	if (aWidth <= 0 || aHeight <= 0)
+	if (aClientWidth <= 0 || aClientHeight <= 0)
 		return;
 
-	myDX11->OnWindowResize(aWidth, aHeight, myFullScreenMode);
-	myRenderer->SetAspectRatio(myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
-
-	myCurrentWindowWidth = aWidth;
-	myCurrentWindowHeight = aHeight;
+	myDX11->OnWindowResize(aClientWidth, aClientHeight, myFullScreenMode);
+	if (myFullScreenMode)
+		myRenderer->SetAspectRatio(myDX11->GetScreenWidth() / myDX11->GetScreenHeight());
 }
 
 void Engine::OnTextureResize(ImVec2 aSize)
@@ -182,8 +179,25 @@ void Engine::OnTextureResize(ImVec2 aSize)
 		return;
 
 	myDX11->OnTextureResize(aSize.x, aSize.y);
-	myRenderer->SetAspectRatio(aSize.x / aSize.y);
+	if (!myFullScreenMode)
+		myRenderer->SetAspectRatio(aSize.x / aSize.y);
 	myCurrentSceneTabSize = aSize;
+}
+
+void Engine::SetWindowMaximized(bool aMaximized)
+{
+	myWindowMaximized = aMaximized;
+}
+
+bool Engine::GetWindowMaximized()
+{
+	return myWindowMaximized;
+}
+
+void Engine::SetWindowSize(UINT aWindowWidth, UINT aWindowHeight)
+{
+	myWindowWidth = aWindowWidth;
+	myWindowHeight = aWindowHeight;
 }
 
 void Engine::UpdateAndRenderGame()
