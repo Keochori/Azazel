@@ -87,5 +87,6 @@ private:
 	ID3D11ShaderResourceView* myFolderIcon_Empty;
 	ID3D11ShaderResourceView* myArrowIcon_Right;
 	ID3D11ShaderResourceView* myArrowIcon_Down;
+	ID3D11ShaderResourceView* myFileIcon;
 };
 

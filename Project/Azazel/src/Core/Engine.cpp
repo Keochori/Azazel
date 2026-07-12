@@ -26,6 +26,7 @@ Engine::Engine(HWND& aHWND, UINT aWindowWidth, UINT aWindowHeight) : myWindowWid
 	icons.emplace("folder_empty", myAssetManager->GetTexture("folder_empty.png", myDX11->GetDevice())->mySRV.Get());
 	icons.emplace("arrow_right", myAssetManager->GetTexture("arrow_right.png", myDX11->GetDevice())->mySRV.Get());
 	icons.emplace("arrow_down", myAssetManager->GetTexture("arrow_down.png", myDX11->GetDevice())->mySRV.Get());
+	icons.emplace("file", myAssetManager->GetTexture("file.png", myDX11->GetDevice())->mySRV.Get());
 	myImGuiManager = std::make_unique<ImGuiManager>(aHWND, myDX11->GetDevice(), myDX11->GetContext(), myDX11->GetTextureSRV(), icons, myScene.get());
 
 	// Create entities

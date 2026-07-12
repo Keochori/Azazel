@@ -20,6 +20,7 @@ FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderRes
 	myFolderIcon_Empty = aIcons.at("folder_empty");
 	myArrowIcon_Right = aIcons.at("arrow_right");
 	myArrowIcon_Down = aIcons.at("arrow_down");
+	myFileIcon = aIcons.at("file");
 }
 
 void FileExplorerTab::Shutdown()
