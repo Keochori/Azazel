@@ -132,38 +132,7 @@ void Engine::Update()
 		}
 	}
 
-	// Rendering & DX11
-	if (myFullScreenMode)
-	{
-		myDX11->ClearRTV(true);
-		myDX11->BindRTV(true);
-		UpdateScene();
-		RenderScene();
-		myDX11->PresentFrame();
-	}
-	else
-	{
-		// Render Scene to Texture2D
-		myDX11->SetViewPort(myCurrentSceneTabSize.x, myCurrentSceneTabSize.y);
-		myDX11->ClearTextureRTV();
-		myDX11->BindTextureRTV();
-		UpdateScene();
-		RenderScene();
-
-		// Now render ImGui to window
-		myDX11->SetViewPort(myDX11->GetScreenWidth(), myDX11->GetScreenHeight());
-		myDX11->ClearRTV();
-		myDX11->BindRTV();
-		myImGuiManager->NewFrame();
-		myImGuiManager->Update();
-		myImGuiManager->Render();
-		myDX11->PresentFrame();
-
-		// Check if ImGui scene tab was resized
-		ImVec2 sceneTabSize = myImGuiManager->GetSceneTabSize();
-		if (myCurrentSceneTabSize != sceneTabSize)
-			OnTextureResize(sceneTabSize);
-	}
+	RenderEngine();
 }
 
 void Engine::OnWindowResize(UINT aClientWidth, UINT aClientHeight)
@@ -203,6 +172,41 @@ void Engine::SetWindowSize(UINT aWindowWidth, UINT aWindowHeight)
 	myWindowHeight = aWindowHeight;
 }
 
+void Engine::RenderEngine()
+{
+	if (myFullScreenMode)
+	{
+		myDX11->ClearRTV(true);
+		myDX11->BindRTV(true);
+		UpdateScene();
+		RenderScene();
+		myDX11->PresentFrame();
+	}
+	else
+	{
+		// Render Scene to Texture2D
+		myDX11->SetViewPort(myCurrentSceneTabSize.x, myCurrentSceneTabSize.y);
+		myDX11->ClearTextureRTV();
+		myDX11->BindTextureRTV();
+		UpdateScene();
+		RenderScene();
+
+		// Now render ImGui to window
+		myDX11->SetViewPort(myDX11->GetScreenWidth(), myDX11->GetScreenHeight());
+		myDX11->ClearRTV();
+		myDX11->BindRTV();
+		myImGuiManager->NewFrame();
+		myImGuiManager->Update();
+		myImGuiManager->Render();
+		myDX11->PresentFrame();
+
+		// Check if ImGui scene tab was resized
+		ImVec2 sceneTabSize = myImGuiManager->GetSceneTabSize();
+		if (myCurrentSceneTabSize != sceneTabSize)
+			OnTextureResize(sceneTabSize);
+	}
+}
+
 void Engine::UpdateScene()
 {
 	myScene->Update();
@@ -214,3 +218,4 @@ void Engine::RenderScene()
 {
 	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
 }
+

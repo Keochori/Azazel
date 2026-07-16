@@ -25,6 +25,7 @@ public:
 	bool GetWindowMaximized();
 
 private:
+	void RenderEngine();
 	void UpdateScene();
 	void RenderScene();
 	std::unique_ptr<DX11> myDX11;
