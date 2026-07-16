@@ -25,7 +25,8 @@ public:
 	bool GetWindowMaximized();
 
 private:
-	void UpdateAndRenderGame();
+	void UpdateScene();
+	void RenderScene();
 	std::unique_ptr<DX11> myDX11;
 	std::unique_ptr<Renderer> myRenderer;
 	std::unique_ptr<ImGuiManager> myImGuiManager;

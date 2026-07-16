@@ -137,7 +137,8 @@ void Engine::Update()
 	{
 		myDX11->ClearRTV(true);
 		myDX11->BindRTV(true);
-		UpdateAndRenderGame();
+		UpdateScene();
+		RenderScene();
 		myDX11->PresentFrame();
 	}
 	else
@@ -146,7 +147,8 @@ void Engine::Update()
 		myDX11->SetViewPort(myCurrentSceneTabSize.x, myCurrentSceneTabSize.y);
 		myDX11->ClearTextureRTV();
 		myDX11->BindTextureRTV();
-		UpdateAndRenderGame();
+		UpdateScene();
+		RenderScene();
 
 		// Now render ImGui to window
 		myDX11->SetViewPort(myDX11->GetScreenWidth(), myDX11->GetScreenHeight());
@@ -201,9 +203,14 @@ void Engine::SetWindowSize(UINT aWindowWidth, UINT aWindowHeight)
 	myWindowHeight = aWindowHeight;
 }
 
-void Engine::UpdateAndRenderGame()
+void Engine::UpdateScene()
 {
 	myScene->Update();
 	myAnimator->Update();
+	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
+}
+
+void Engine::RenderScene()
+{
 	myRenderer->Render(myDX11->GetContext(), myScene->GetEditorCameraViewMatrix(), myScene->GetRenderData());
 }
