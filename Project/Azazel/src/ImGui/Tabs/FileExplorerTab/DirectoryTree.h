@@ -1,13 +1,11 @@
 #pragma once
 #include "ImGui/imguiIncludes.h"
 #include "Assets/AssetGUID.h"
-#include <unordered_map>
-#include <unordered_set>
 #include <filesystem>
+#include <unordered_set>
+#include <unordered_map>
 #include <d3d11.h>
 #include <wrl.h> 
-
-using Microsoft::WRL::ComPtr;
 
 struct PendingMove
 {
@@ -15,23 +13,19 @@ struct PendingMove
 	std::filesystem::path myDestination;
 };
 
-class FileExplorerTab
+class DirectoryTree
 {
 public:
-	FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons);
-	~FileExplorerTab() = default;
+	DirectoryTree(bool& aLeftPanelFocused, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons);
+	~DirectoryTree() = default;
 
+	void Draw();
 	void Shutdown();
 	void Update();
 	void CheckInputs();
-	void OpenTab();
-
-private:
-	void DrawLeftPanel();
-	void DrawRightPanel();
-	void PanelSplitter();
 	void UpdatePendingMove();
 
+private:
 	AssetGUID GetFolderGUID(const std::filesystem::path& aPath);
 	void BuildGUIDCache();
 
@@ -53,7 +47,7 @@ private:
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
 
-	bool myTabOpen = true;
+	bool& myLeftPanelFocused;
 
 	bool myLeftClickOnRelease = false;
 	std::filesystem::path myRootPath = "Assets";
@@ -62,9 +56,6 @@ private:
 	std::unordered_set<std::filesystem::path> mySelectedPaths;
 	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
 	std::unordered_map<AssetGUID, bool> myExpandedFoldersMap;
-
-	float myLeftPanelWidth = 250.0f;
-	float myLeftPanelFocused = false;
 
 	// Renaming
 	char myRenameBuffer[256];

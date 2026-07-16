@@ -4,7 +4,7 @@
 #include "Tabs/ConsoleTab.h"
 #include "Tabs/HierarchyTab.h"
 #include "Tabs/InspectorTab.h"
-#include "Tabs/FileExplorerTab.h"
+#include "Tabs/FileExplorerTab/FileExplorerTab.h"
 
 using namespace Microsoft::WRL;
 
