@@ -7,13 +7,13 @@
 
 DirectoryTree::DirectoryTree(bool& aLeftPanelFocused, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons) : myLeftPanelFocused(aLeftPanelFocused)
 {
-	mySelectedPaths.insert(myRootPath);
+	mySelectedDirectories.insert(myRootPath);
 	myAnchorPath = myRootPath;
-	BuildGUIDCache();
+	RebuildGUIDCache();
 
 	const auto& expandedFolders = EditorState::GetInstance().GetExpandedFolders();
 	for (const auto& guid : expandedFolders)
-		myExpandedFoldersMap[guid] = true;
+		myExpandedDirectoriesMap[guid] = true;
 
 	myFolderIcon_Closed = aIcons.at("folder_closed");
 	myFolderIcon_Open = aIcons.at("folder_open");
@@ -31,7 +31,7 @@ void DirectoryTree::Draw()
 void DirectoryTree::Shutdown()
 {
 	std::unordered_set<AssetGUID> expandedFolders;
-	for (const auto& entry : myExpandedFoldersMap)
+	for (const auto& entry : myExpandedDirectoriesMap)
 	{
 		AssetGUID guid = entry.first;
 		bool expanded = entry.second;
@@ -56,7 +56,7 @@ void DirectoryTree::CheckInputs()
 	if (ImGui::IsKeyPressed(ImGuiKey_F2))
 		if (myLeftPanelFocused)
 			if (!myRightClickContextOpen)
-				StartRenaming(myAnchorPath);
+				ActivateRenaming(myAnchorPath);
 	if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 		if (!myRenamingPath.empty())
 			myRenamingPath.clear();
@@ -70,7 +70,7 @@ void DirectoryTree::CheckInputs()
 	if (ImGui::IsKeyPressed(ImGuiKey_Delete))
 		if (myLeftPanelFocused)
 			if (!myDeleteConfirmContextOpen)
-				if (!mySelectedPaths.contains(myRootPath))
+				if (!mySelectedDirectories.contains(myRootPath))
 				{
 					myDeleteConfirmContextOpen = true;
 					ImGui::OpenPopup("Confirm Delete");
@@ -82,12 +82,12 @@ void DirectoryTree::UpdatePendingMove()
 	if (myPendingMove.has_value())
 	{
 		// Fetch GUID for anchor and selected paths
-		AssetGUID myAnchorGUID = myFolderGUIDs[myAnchorPath];
+		AssetGUID myAnchorGUID = myDirectoryGUIDs[myAnchorPath];
 		std::unordered_set<AssetGUID> mySelectedGUIDs;
-		for (const auto& selectedPath : mySelectedPaths)
-			mySelectedGUIDs.insert(myFolderGUIDs[selectedPath]);
+		for (const auto& selectedPath : mySelectedDirectories)
+			mySelectedGUIDs.insert(myDirectoryGUIDs[selectedPath]);
 
-		mySelectedPaths.clear();
+		mySelectedDirectories.clear();
 
 		const std::vector<std::filesystem::path>& sources = myPendingMove->mySources;
 		std::vector<std::filesystem::path> destinations;
@@ -104,34 +104,48 @@ void DirectoryTree::UpdatePendingMove()
 			std::filesystem::rename(source, destination);
 
 			// Retain selection
-			mySelectedPaths.insert(destination);
+			mySelectedDirectories.insert(destination);
 		}
 
 		// Rebuild GUID cache after moving files
-		BuildGUIDCache();
+		RebuildGUIDCache();
 
 		// Retain selection & anchor path
 		for (const auto& destination : destinations)
 		{
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(destination))
 			{
-				AssetGUID guid = myFolderGUIDs[entry.path()];
+				AssetGUID guid = myDirectoryGUIDs[entry.path()];
 				if (guid == myAnchorGUID)
 					myAnchorPath = entry.path();
 				if (mySelectedGUIDs.contains(guid))
-					mySelectedPaths.insert(entry.path());
+					mySelectedDirectories.insert(entry.path());
 			}
 		}
 
 		// Open destination folder after moving
-		myExpandedFoldersMap[myFolderGUIDs[myPendingMove->myDestination]] = true;
+		myExpandedDirectoriesMap[myDirectoryGUIDs[myPendingMove->myDestination]] = true;
 
 		myLeftClickOnRelease = false;
 		myPendingMove.reset();
 	}
 }
 
-AssetGUID DirectoryTree::GetFolderGUID(const std::filesystem::path& aPath)
+void DirectoryTree::BuildVisibleNodeList(const std::filesystem::path& aPath)
+{
+	myVisibleNodes.push_back(aPath);
+
+	if (myExpandedDirectoriesMap[myDirectoryGUIDs[aPath]])
+	{
+		for (const auto& entry : std::filesystem::directory_iterator(aPath))
+		{
+			if (entry.is_directory())
+				BuildVisibleNodeList(entry.path());
+		}
+	}
+}
+
+AssetGUID DirectoryTree::GetDirectoryGUID(const std::filesystem::path& aPath)
 {
 	const std::filesystem::path metaPath = aPath / ".foldermeta";
 
@@ -154,14 +168,14 @@ AssetGUID DirectoryTree::GetFolderGUID(const std::filesystem::path& aPath)
 	return guid;
 }
 
-void DirectoryTree::BuildGUIDCache()
+void DirectoryTree::RebuildGUIDCache()
 {
-	myFolderGUIDs.clear();
-	myFolderGUIDs[myRootPath] = GetFolderGUID(myRootPath);
+	myDirectoryGUIDs.clear();
+	myDirectoryGUIDs[myRootPath] = GetDirectoryGUID(myRootPath);
 
 	for (const auto& entry : std::filesystem::recursive_directory_iterator(myRootPath))
 		if (entry.is_directory())
-			myFolderGUIDs[entry.path()] = GetFolderGUID(entry.path());
+			myDirectoryGUIDs[entry.path()] = GetDirectoryGUID(entry.path());
 }
 
 bool DirectoryTree::HasDirectories(const std::filesystem::path& aPath)
@@ -184,29 +198,15 @@ bool DirectoryTree::IsInsideDirectory(const std::filesystem::path& aSource, cons
 	return mismatch.first == destinationAbsolute.end();
 }
 
-void DirectoryTree::BuildVisibleNodeList(const std::filesystem::path& aPath)
+void DirectoryTree::LeftClick(const std::filesystem::path& aClickedPath)
 {
-	myVisibleNodes.push_back(aPath);
-
-	if (myExpandedFoldersMap[myFolderGUIDs[aPath]])
-	{
-		for (const auto& entry : std::filesystem::directory_iterator(aPath))
-		{
-			if (entry.is_directory())
-				BuildVisibleNodeList(entry.path());
-		}
-	}
-}
-
-void DirectoryTree::LeftClickDirectory(const std::filesystem::path& aPath)
-{
-	mySelectedPaths.clear();
-	mySelectedPaths.insert(aPath);
-	myAnchorPath = aPath;
+	mySelectedDirectories.clear();
+	mySelectedDirectories.insert(aClickedPath);
+	myAnchorPath = aClickedPath;
 	myLeftClickOnRelease = false;
 }
 
-void DirectoryTree::ShiftSelectDirectory(const std::filesystem::path& aPath)
+void DirectoryTree::ShiftSelect(const std::filesystem::path& aPath)
 {
 	auto anchorIt = std::find(myVisibleNodes.begin(), myVisibleNodes.end(), myAnchorPath);
 	auto clickedIt = std::find(myVisibleNodes.begin(), myVisibleNodes.end(), aPath);
@@ -214,16 +214,16 @@ void DirectoryTree::ShiftSelectDirectory(const std::filesystem::path& aPath)
 	if (anchorIt == myVisibleNodes.end() || clickedIt == myVisibleNodes.end())
 		return;
 
-	mySelectedPaths.clear();
+	mySelectedDirectories.clear();
 
 	if (anchorIt > clickedIt)
 		std::swap(anchorIt, clickedIt);
 
 	for (auto it = anchorIt; it != std::next(clickedIt); it++)
-		mySelectedPaths.insert(*it);
+		mySelectedDirectories.insert(*it);
 }
 
-void DirectoryTree::DragDropDirectoryNode(const std::filesystem::path& aPath)
+void DirectoryTree::DragDrop(const std::filesystem::path& aPath)
 {
 	// Drag Source
 	if (ImGui::BeginDragDropSource())
@@ -243,7 +243,7 @@ void DirectoryTree::DragDropDirectoryNode(const std::filesystem::path& aPath)
 			std::filesystem::path destination = aPath;
 
 			bool insideDirectory = false;
-			for (const auto& path : mySelectedPaths)
+			for (const auto& path : mySelectedDirectories)
 			{
 				if (IsInsideDirectory(destination, path))
 				{
@@ -253,7 +253,7 @@ void DirectoryTree::DragDropDirectoryNode(const std::filesystem::path& aPath)
 			}
 
 			if (!insideDirectory)
-				myPendingMove.emplace(GetHighestDirectories(mySelectedPaths), destination);
+				myPendingMove.emplace(GetHighestDirectories(mySelectedDirectories), destination);
 		}
 
 		ImGui::EndDragDropTarget();
@@ -264,134 +264,15 @@ void DirectoryTree::OpenParentDirectories(const std::filesystem::path& aPath)
 {
 	if (aPath != myRootPath)
 	{
-		myExpandedFoldersMap[myFolderGUIDs[aPath.parent_path()]] = true;
+		myExpandedDirectoriesMap[myDirectoryGUIDs[aPath.parent_path()]] = true;
 
 		OpenParentDirectories(aPath.parent_path());
 	}
 }
 
-void DirectoryTree::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
+void DirectoryTree::ActivateRenaming(const std::filesystem::path& aPath)
 {
-	bool nodeActivated = false;
-	bool selected = false;
-	for (const auto& path : mySelectedPaths)
-	{
-		if (path == aPath)
-		{
-			selected = true;
-			break;
-		}
-	}
-
-	ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
-	ImVec4 blue(0.26f, 0.59f, 0.98f, 0.31f);
-	ImVec4 gray(0.5f, 0.5f, 0.5f, 0.25f);
-
-	// Node color
-	bool focused = myLeftPanelFocused || myRightClickContextOpen;
-	ImGui::PushStyleColor(ImGuiCol_HeaderActive, blue);
-	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? (focused ? blue : gray) : transparent);
-	if (!focused)
-		ImGui::PushStyleColor(ImGuiCol_Header, gray);
-
-	// Rename Input Field
-	if (myRenamingPath == aPath)
-	{
-		bool renamed = false;
-		if (myFocusRenameInputField)
-		{
-			ImGui::SetKeyboardFocusHere();
-			myFocusRenameInputField = false;
-		}
-		if (ImGui::InputText("##Rename", myRenameBuffer, sizeof(myRenameBuffer),
-			ImGuiInputTextFlags_AutoSelectAll |
-			ImGuiInputTextFlags_EnterReturnsTrue))
-		{
-			myRenamingPath.clear();
-			Rename(aPath);
-			renamed = true;
-		}
-
-		if (ImGui::IsItemDeactivated())
-		{
-			if (!renamed)
-			{
-				myRenamingPath.clear();
-				Rename(aPath);
-			}
-		}
-	}
-	// Node
-	else
-	{
-		if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
-		{
-			if (myLeftClickOnRelease)
-				LeftClickDirectory(aPath);
-		}
-
-		nodeActivated = ImGui::IsItemActivated();
-	}
-
-	// Left-Click
-	bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
-	if (nodeActivated)
-	{
-		// Shift-Click
-		if (ImGui::GetIO().KeyShift)
-		{
-			OpenParentDirectories(myAnchorPath);
-			myVisibleNodes.clear();
-			BuildVisibleNodeList(myRootPath);
-			ShiftSelectDirectory(aPath);
-		}
-		// Ctrl-Click
-		else if (ImGui::GetIO().KeyCtrl)
-		{
-			// Select/Deselect 
-			if (mySelectedPaths.contains(aPath))
-				mySelectedPaths.erase(aPath);
-			else
-				mySelectedPaths.insert(aPath);
-
-			// Open all parent directories
-			for (const auto& path : mySelectedPaths)
-				OpenParentDirectories(path);
-
-			myAnchorPath = aPath;
-		}
-		// Left-Click
-		else
-		{
-			if (!mySelectedPaths.contains(aPath) || !clicked)
-				LeftClickDirectory(aPath);
-			else
-				myLeftClickOnRelease = true;
-		}
-	}
-
-	// Right-Click
-	if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-	{
-		if (!mySelectedPaths.contains(aPath))
-			LeftClickDirectory(aPath);
-
-		myRightClickContextPos = ImGui::GetMousePos();
-		myJustOpenedRightClickContext = true;
-		myRightClickContextOpen = true;
-		myRightClickedPath = aPath;
-	}
-
-	// Pop ImGui style colors
-	if (!focused)
-		ImGui::PopStyleColor(3);
-	else
-		ImGui::PopStyleColor(2);
-}
-
-void DirectoryTree::StartRenaming(const std::filesystem::path& aPath)
-{
-	if (mySelectedPaths.size() == 1 && aPath != myRootPath)
+	if (mySelectedDirectories.size() == 1 && aPath != myRootPath)
 	{
 		myFocusRenameInputField = true;
 		myRenamingPath = aPath;
@@ -415,13 +296,13 @@ void DirectoryTree::Rename(const std::filesystem::path& aPath)
 		std::filesystem::rename(aPath, newPath);
 
 		// Rebuild GUID Cache
-		BuildGUIDCache();
+		RebuildGUIDCache();
 
 		// Re-select node
-		if (mySelectedPaths.contains(aPath))
+		if (mySelectedDirectories.contains(aPath))
 		{
-			mySelectedPaths.erase(aPath);
-			mySelectedPaths.insert(newPath);
+			mySelectedDirectories.erase(aPath);
+			mySelectedDirectories.insert(newPath);
 			if (myAnchorPath == aPath)
 				myAnchorPath = newPath;
 		}
@@ -529,35 +410,35 @@ void DirectoryTree::RightClickContext()
 			myRightClickContextOpen = false;
 
 			// Select only Anchor path
-			mySelectedPaths.clear();
-			mySelectedPaths.insert(myAnchorPath);
+			mySelectedDirectories.clear();
+			mySelectedDirectories.insert(myAnchorPath);
 
 			// Open parent node
-			myExpandedFoldersMap[myFolderGUIDs[myRightClickedPath]] = true;
+			myExpandedDirectoriesMap[myDirectoryGUIDs[myRightClickedPath]] = true;
 
 			// Create
 			std::filesystem::path newDirectory = myRightClickedPath / CheckValidName(myRightClickedPath, "New File", true);
 			std::filesystem::create_directory(newDirectory);
 
 			// Create new GUID and add to cache
-			myFolderGUIDs[newDirectory] = GetFolderGUID(newDirectory);
+			myDirectoryGUIDs[newDirectory] = GetDirectoryGUID(newDirectory);
 
 			// Start renaming
-			StartRenaming(newDirectory);
+			ActivateRenaming(newDirectory);
 		}
 
-		bool deleteEnabled = !mySelectedPaths.contains(myRootPath);
+		bool deleteEnabled = !mySelectedDirectories.contains(myRootPath);
 		if (ImGui::MenuItem("Delete", nullptr, false, deleteEnabled))
 		{
 			myRightClickContextOpen = false;
 			myDeleteConfirmContextOpen = true;
 		}
 
-		bool renameEnabled = (mySelectedPaths.size() == 1 && myAnchorPath != myRootPath);
+		bool renameEnabled = (mySelectedDirectories.size() == 1 && myAnchorPath != myRootPath);
 		if (ImGui::MenuItem("Rename", nullptr, false, renameEnabled))
 		{
 			myRightClickContextOpen = false;
-			StartRenaming(myRightClickedPath);
+			ActivateRenaming(myRightClickedPath);
 		}
 
 		contextHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
@@ -579,13 +460,13 @@ void DirectoryTree::DeleteConfirmContext()
 	{
 		if (ImGui::BeginPopupModal("Confirm Delete", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			for (const std::filesystem::path& entry : mySelectedPaths)
+			for (const std::filesystem::path& entry : mySelectedDirectories)
 				ImGui::Text(entry.string().c_str());
 
 			ImGui::NewLine();
 
 			std::string assetWord = "asset";
-			if (mySelectedPaths.size() > 1)
+			if (mySelectedDirectories.size() > 1)
 				assetWord = "assets";
 
 			std::string question = "Delete selected " + assetWord + "? This action cannot be undone.";
@@ -599,12 +480,12 @@ void DirectoryTree::DeleteConfirmContext()
 				myDeleteConfirmContextOpen = false;
 
 				// Make one of the highest directories parent_path selected and anchored
-				const auto highestDirectories = GetHighestDirectories(mySelectedPaths);
+				const auto highestDirectories = GetHighestDirectories(mySelectedDirectories);
 				if (!highestDirectories.empty())
 				{
 					const auto& directory = highestDirectories[0].parent_path();
-					mySelectedPaths.clear();
-					mySelectedPaths.insert(directory);
+					mySelectedDirectories.clear();
+					mySelectedDirectories.insert(directory);
 					myAnchorPath = directory;
 				}
 
@@ -612,12 +493,12 @@ void DirectoryTree::DeleteConfirmContext()
 				{
 					for (const auto& entry : std::filesystem::recursive_directory_iterator(path))
 					{
-						myExpandedFoldersMap.erase(GetFolderGUID(entry.path()));
-						myFolderGUIDs.erase(entry.path());
+						myExpandedDirectoriesMap.erase(GetDirectoryGUID(entry.path()));
+						myDirectoryGUIDs.erase(entry.path());
 					}
 
-					myExpandedFoldersMap.erase(GetFolderGUID(path));
-					myFolderGUIDs.erase(path);
+					myExpandedDirectoriesMap.erase(GetDirectoryGUID(path));
+					myDirectoryGUIDs.erase(path);
 					std::filesystem::remove_all(path);
 				}
 			}
@@ -633,9 +514,128 @@ void DirectoryTree::DeleteConfirmContext()
 	}
 }
 
+void DirectoryTree::NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel)
+{
+	bool nodeActivated = false;
+	bool selected = false;
+	for (const auto& path : mySelectedDirectories)
+	{
+		if (path == aPath)
+		{
+			selected = true;
+			break;
+		}
+	}
+
+	ImVec4 transparent(0.0f, 0.0f, 0.0f, 0.0f);
+	ImVec4 blue(0.26f, 0.59f, 0.98f, 0.31f);
+	ImVec4 gray(0.5f, 0.5f, 0.5f, 0.25f);
+
+	// Node color
+	bool focused = myLeftPanelFocused || myRightClickContextOpen;
+	ImGui::PushStyleColor(ImGuiCol_HeaderActive, blue);
+	ImGui::PushStyleColor(ImGuiCol_HeaderHovered, selected ? (focused ? blue : gray) : transparent);
+	if (!focused)
+		ImGui::PushStyleColor(ImGuiCol_Header, gray);
+
+	// Rename Input Field
+	if (myRenamingPath == aPath)
+	{
+		bool renamed = false;
+		if (myFocusRenameInputField)
+		{
+			ImGui::SetKeyboardFocusHere();
+			myFocusRenameInputField = false;
+		}
+		if (ImGui::InputText("##Rename", myRenameBuffer, sizeof(myRenameBuffer),
+			ImGuiInputTextFlags_AutoSelectAll |
+			ImGuiInputTextFlags_EnterReturnsTrue))
+		{
+			myRenamingPath.clear();
+			Rename(aPath);
+			renamed = true;
+		}
+
+		if (ImGui::IsItemDeactivated())
+		{
+			if (!renamed)
+			{
+				myRenamingPath.clear();
+				Rename(aPath);
+			}
+		}
+	}
+	// Node
+	else
+	{
+		if (ImGui::Selectable(aLabel.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+		{
+			if (myLeftClickOnRelease)
+				LeftClick(aPath);
+		}
+
+		nodeActivated = ImGui::IsItemActivated();
+	}
+
+	// Left-Click
+	bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
+	if (nodeActivated)
+	{
+		// Shift-Click
+		if (ImGui::GetIO().KeyShift)
+		{
+			OpenParentDirectories(myAnchorPath);
+			myVisibleNodes.clear();
+			BuildVisibleNodeList(myRootPath);
+			ShiftSelect(aPath);
+		}
+		// Ctrl-Click
+		else if (ImGui::GetIO().KeyCtrl)
+		{
+			// Select/Deselect 
+			if (mySelectedDirectories.contains(aPath))
+				mySelectedDirectories.erase(aPath);
+			else
+				mySelectedDirectories.insert(aPath);
+
+			// Open all parent directories
+			for (const auto& path : mySelectedDirectories)
+				OpenParentDirectories(path);
+
+			myAnchorPath = aPath;
+		}
+		// Left-Click
+		else
+		{
+			if (!mySelectedDirectories.contains(aPath) || !clicked)
+				LeftClick(aPath);
+			else
+				myLeftClickOnRelease = true;
+		}
+	}
+
+	// Right-Click
+	if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+	{
+		if (!mySelectedDirectories.contains(aPath))
+			LeftClick(aPath);
+
+		myRightClickContextPos = ImGui::GetMousePos();
+		myJustOpenedRightClickContext = true;
+		myRightClickContextOpen = true;
+		myRightClickedPath = aPath;
+	}
+
+	// Pop ImGui style colors
+	if (!focused)
+		ImGui::PopStyleColor(3);
+	else
+		ImGui::PopStyleColor(2);
+}
+
 void DirectoryTree::DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin)
 {
-	bool& open = myExpandedFoldersMap[myFolderGUIDs[aPath]];
+	bool& open = myExpandedDirectoriesMap[myDirectoryGUIDs[aPath]];
 	bool hasDirectories = HasDirectories(aPath);
 
 	ImTextureID folderIcon = open ? (ImTextureID)myFolderIcon_Open : (ImTextureID)myFolderIcon_Closed;
@@ -661,14 +661,14 @@ void DirectoryTree::DrawDirectoryNode(const std::filesystem::path& aPath, float 
 			open = !open;
 
 		ImGui::PopStyleColor(3);
-		ImGui::SameLine();
 	}
 	else
 	{
 		// Create dummy for margin/padding if no button
 		ImGui::Dummy(ImVec2(ImGui::GetFrameHeight() - 2, 0));
-		ImGui::SameLine();
 	}
+
+	ImGui::SameLine();
 
 	// Draw folder icon
 	ImGui::Image(folderIcon, ImVec2(13, 13));
@@ -678,7 +678,7 @@ void DirectoryTree::DrawDirectoryNode(const std::filesystem::path& aPath, float 
 	NodeLogic(aPath, aPath.filename().string());
 
 	// Drag Drop Logic
-	DragDropDirectoryNode(aPath);
+	DragDrop(aPath);
 
 	ImGui::PopID();
 }
@@ -687,8 +687,8 @@ void DirectoryTree::DrawDirectoryTree(const std::filesystem::path& aPath, int aM
 {
 	DrawDirectoryNode(aPath, aMargin);
 
-	if (myFolderGUIDs.contains(aPath))
-		if (myExpandedFoldersMap[myFolderGUIDs[aPath]])
+	if (myDirectoryGUIDs.contains(aPath))
+		if (myExpandedDirectoriesMap[myDirectoryGUIDs[aPath]])
 			for (const auto& entry : std::filesystem::directory_iterator(aPath))
 				if (entry.is_directory())
 					DrawDirectoryTree(entry.path(), aMargin + aMarginIncrement, aMarginIncrement);

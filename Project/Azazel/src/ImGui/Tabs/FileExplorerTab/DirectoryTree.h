@@ -26,36 +26,39 @@ public:
 	void UpdatePendingMove();
 
 private:
-	AssetGUID GetFolderGUID(const std::filesystem::path& aPath);
-	void BuildGUIDCache();
+	void BuildVisibleNodeList(const std::filesystem::path& aPath);
+	AssetGUID GetDirectoryGUID(const std::filesystem::path& aPath);
+	void RebuildGUIDCache();
 
 	bool HasDirectories(const std::filesystem::path& aPath);
 	bool IsInsideDirectory(const std::filesystem::path& aSource, const std::filesystem::path& aDestination);
 
-	void BuildVisibleNodeList(const std::filesystem::path& aPath);
-	void LeftClickDirectory(const std::filesystem::path& aPath);
-	void ShiftSelectDirectory(const std::filesystem::path& aClickedPath);
-	void DragDropDirectoryNode(const std::filesystem::path& aPath);
+	void LeftClick(const std::filesystem::path& aClickedPath);
+	void ShiftSelect(const std::filesystem::path& aClickedPath);
+	void DragDrop(const std::filesystem::path& aPath);
+
 	void OpenParentDirectories(const std::filesystem::path& aPath);
-	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
-	void StartRenaming(const std::filesystem::path& aPath);
+	void ActivateRenaming(const std::filesystem::path& aPath);
 	void Rename(const std::filesystem::path& aPath);
 	std::string CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aNewFile);
+
 	std::vector<std::filesystem::path> GetHighestDirectories(const std::unordered_set<std::filesystem::path>& aDirectories);
+
 	void RightClickContext();
 	void DeleteConfirmContext();
+
+	void NodeLogic(const std::filesystem::path& aPath, const std::string& aLabel);
 	void DrawDirectoryNode(const std::filesystem::path& aPath, float aMargin);
 	void DrawDirectoryTree(const std::filesystem::path& aPath, int aMargin, int aMarginIncrement);
 
 	bool& myLeftPanelFocused;
-
 	bool myLeftClickOnRelease = false;
 	std::filesystem::path myRootPath = "Assets";
 	std::filesystem::path myAnchorPath;
 	std::vector<std::filesystem::path> myVisibleNodes;
-	std::unordered_set<std::filesystem::path> mySelectedPaths;
-	std::unordered_map<std::filesystem::path, AssetGUID> myFolderGUIDs;
-	std::unordered_map<AssetGUID, bool> myExpandedFoldersMap;
+	std::unordered_set<std::filesystem::path> mySelectedDirectories;
+	std::unordered_map<std::filesystem::path, AssetGUID> myDirectoryGUIDs;
+	std::unordered_map<AssetGUID, bool> myExpandedDirectoriesMap;
 
 	// Renaming
 	char myRenameBuffer[256];
