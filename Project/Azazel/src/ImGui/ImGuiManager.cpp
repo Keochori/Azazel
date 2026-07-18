@@ -7,7 +7,7 @@
 
 ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID3D11DeviceContext>& aContext,
 	ComPtr<ID3D11ShaderResourceView>& aSceneSRV, std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons, Scene* aScene)
-	: mySceneTab(aSceneSRV), myHierarchyTab(aScene), myInspectorTab(aScene), myFileExplorerTab(aIcons)
+	: mySceneTab(aSceneSRV), myHierarchyTab(aScene), myInspectorTab(aScene), myAssetsTab(aIcons)
 {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -24,7 +24,7 @@ ImGuiManager::ImGuiManager(HWND& aHWND, ComPtr<ID3D11Device>& aDevice, ComPtr<ID
 
 void ImGuiManager::Shutdown()
 {
-	myFileExplorerTab.Shutdown();
+	myAssetsTab.Shutdown();
 }
 
 void ImGuiManager::NewFrame()
@@ -45,7 +45,7 @@ void ImGuiManager::Update()
 	myConsoleTab.Update();
 	myHierarchyTab.Update();
 	myInspectorTab.Update(myHierarchyTab.GetSelectedEntity());
-	myFileExplorerTab.Update();
+	myAssetsTab.Update();
 }
 
 void ImGuiManager::Render()
@@ -74,8 +74,8 @@ void ImGuiManager::MainMenuBar()
 
 		if (ImGui::BeginMenu("Window"))
 		{
-			if (ImGui::MenuItem("File Explorer"))
-				myFileExplorerTab.OpenTab();
+			if (ImGui::MenuItem("Assets"))
+				myAssetsTab.OpenTab();
 
 			if (ImGui::MenuItem("Console"))
 				myConsoleTab.OpenTab();

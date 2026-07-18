@@ -10,11 +10,11 @@
 
 using Microsoft::WRL::ComPtr;
 
-class FileExplorerTab
+class AssetsTab
 {
 public:
-	FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons);
-	~FileExplorerTab() = default;
+	AssetsTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons);
+	~AssetsTab() = default;
 
 	void Shutdown();
 	void Update();

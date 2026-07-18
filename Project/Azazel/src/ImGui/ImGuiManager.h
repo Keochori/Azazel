@@ -4,7 +4,7 @@
 #include "Tabs/ConsoleTab.h"
 #include "Tabs/HierarchyTab.h"
 #include "Tabs/InspectorTab.h"
-#include "Tabs/FileExplorerTab/FileExplorerTab.h"
+#include "Tabs/AssetsTab/AssetsTab.h"
 
 using namespace Microsoft::WRL;
 
@@ -32,5 +32,5 @@ private:
 	ConsoleTab myConsoleTab;
 	HierarchyTab myHierarchyTab;
 	InspectorTab myInspectorTab;
-	FileExplorerTab myFileExplorerTab;
+	AssetsTab myAssetsTab;
 };

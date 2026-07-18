@@ -1,25 +1,25 @@
-﻿#include "pch.h"
-#include "FileExplorerTab.h"
+#include "pch.h"
+#include "AssetsTab.h"
 #include "EditorState/EditorState.h"
 #include <algorithm>
 #include <fstream>
 #include <cctype>
 
-FileExplorerTab::FileExplorerTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons)
+AssetsTab::AssetsTab(std::unordered_map<std::string, ID3D11ShaderResourceView*>& aIcons)
 {
 	myDirectoryTree = new DirectoryTree(myLeftPanelFocused, aIcons);
 }
 
-void FileExplorerTab::Shutdown()
+void AssetsTab::Shutdown()
 {
 	myDirectoryTree->Shutdown();
 }
 
-void FileExplorerTab::Update()
+void AssetsTab::Update()
 {
 	if (myTabOpen)
 	{
-		ImGui::Begin("File Explorer", &myTabOpen, ImGuiWindowFlags_NoCollapse);
+		ImGui::Begin("Assets", &myTabOpen, ImGuiWindowFlags_NoCollapse);
 
 		LeftPanel();
 		PanelSplitter();
@@ -28,12 +28,12 @@ void FileExplorerTab::Update()
 	}
 }
 
-void FileExplorerTab::OpenTab()
+void AssetsTab::OpenTab()
 {
 	myTabOpen = true;
 }
 
-void FileExplorerTab::LeftPanel()
+void AssetsTab::LeftPanel()
 {
 	ImGui::BeginChild("LeftPanel", ImVec2(myLeftPanelWidth, 0), true);
 
@@ -45,7 +45,7 @@ void FileExplorerTab::LeftPanel()
 	myDirectoryTree->Update();
 }
 
-void FileExplorerTab::PanelSplitter()
+void AssetsTab::PanelSplitter()
 {
 	ImGui::SameLine();
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.2f, 0.2f, 0.2f));
