@@ -93,7 +93,12 @@ void DirectoryTree::UpdatePendingMove()
 		std::vector<std::filesystem::path> destinations;
 		for (const auto& source : sources)
 		{
-			const std::filesystem::path destination = myPendingMove->myDestination / source.filename();
+			std::filesystem::path destination = myPendingMove->myDestination / source.filename().string();
+
+			// If moving to the exact same destination, don't check for a valid name as it will check itself
+			if (destination != source)
+				destination = myPendingMove->myDestination / CheckValidName(myPendingMove->myDestination, source.filename().string());
+
 			destinations.push_back(destination);
 
 			// Retain anchor path
@@ -110,7 +115,7 @@ void DirectoryTree::UpdatePendingMove()
 		// Rebuild GUID cache after moving files
 		RebuildGUIDCache();
 
-		// Retain selection & anchor path
+		// Retain selection & anchor path of child directories
 		for (const auto& destination : destinations)
 		{
 			for (const auto& entry : std::filesystem::recursive_directory_iterator(destination))
@@ -290,7 +295,7 @@ void DirectoryTree::Rename(const std::filesystem::path& aPath)
 
 	if (!renameString.empty())
 	{
-		const std::filesystem::path newPath = aPath.parent_path() / CheckValidName(aPath, renameString, false);
+		const std::filesystem::path newPath = aPath.parent_path() / CheckValidName(aPath, renameString, true);
 
 		// Rename
 		std::filesystem::rename(aPath, newPath);
@@ -309,12 +314,12 @@ void DirectoryTree::Rename(const std::filesystem::path& aPath)
 	}
 }
 
-std::string DirectoryTree::CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aNewFile)
+std::string DirectoryTree::CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aIterateParentDirectory)
 {
 	std::string currentName = aName;
 
 	std::filesystem::path pathToIterate = aPath;
-	if (!aNewFile)
+	if (aIterateParentDirectory)
 		pathToIterate = aPath.parent_path();
 
 	bool foundValidName = false;
@@ -417,7 +422,7 @@ void DirectoryTree::RightClickContext()
 			myExpandedDirectoriesMap[myDirectoryGUIDs[myRightClickedPath]] = true;
 
 			// Create
-			std::filesystem::path newDirectory = myRightClickedPath / CheckValidName(myRightClickedPath, "New File", true);
+			std::filesystem::path newDirectory = myRightClickedPath / CheckValidName(myRightClickedPath, "New File");
 			std::filesystem::create_directory(newDirectory);
 
 			// Create new GUID and add to cache

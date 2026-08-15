@@ -40,7 +40,7 @@ private:
 	void OpenParentDirectories(const std::filesystem::path& aPath);
 	void ActivateRenaming(const std::filesystem::path& aPath);
 	void Rename(const std::filesystem::path& aPath);
-	std::string CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aNewFile);
+	std::string CheckValidName(const std::filesystem::path& aPath, const std::string& aName, bool aIterateParentDirectory = false);
 
 	std::vector<std::filesystem::path> GetHighestDirectories(const std::unordered_set<std::filesystem::path>& aDirectories);
 
